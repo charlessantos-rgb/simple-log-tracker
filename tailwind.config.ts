@@ -47,6 +47,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        status: {
+          aberto: "hsl(var(--status-aberto))",
+          "aberto-bg": "hsl(var(--status-aberto-bg))",
+          andamento: "hsl(var(--status-andamento))",
+          "andamento-bg": "hsl(var(--status-andamento-bg))",
+          resolvido: "hsl(var(--status-resolvido))",
+          "resolvido-bg": "hsl(var(--status-resolvido-bg))",
+          cancelado: "hsl(var(--status-cancelado))",
+          "cancelado-bg": "hsl(var(--status-cancelado-bg))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
