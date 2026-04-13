@@ -6,9 +6,10 @@ interface TabelaOcorrenciasProps {
   onEdit: (o: Ocorrencia) => void;
   onDelete: (id: string) => void;
   onResolve: (id: string) => void;
+  onEnviar: (o: Ocorrencia) => void;
 }
 
-export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve }: TabelaOcorrenciasProps) {
+export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve, onEnviar }: TabelaOcorrenciasProps) {
   const [busca, setBusca] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -78,6 +79,12 @@ export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve }: 
                   </td>
                   <td className="px-3 py-2 text-muted-foreground">{new Date(o.dataCriacao).toLocaleDateString("pt-BR")}</td>
                   <td className="px-3 py-2 text-right space-x-1">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onEnviar(o); }}
+                      className="inline-flex items-center px-2 py-1 text-xs font-medium text-status-andamento hover:bg-status-andamento-bg transition-colors"
+                    >
+                      Enviar
+                    </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); onEdit(o); }}
                       className="inline-flex items-center px-2 py-1 text-xs font-medium text-primary hover:bg-muted transition-colors"
