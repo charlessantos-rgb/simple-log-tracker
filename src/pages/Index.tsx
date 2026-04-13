@@ -11,6 +11,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { TabelaOcorrencias } from "@/components/TabelaOcorrencias";
 import { FormOcorrencia } from "@/components/FormOcorrencia";
 import { CadastroFornecedor } from "@/components/CadastroFornecedor";
+import { RelatorioEmail } from "@/components/RelatorioEmail";
 
 const Index = () => {
   const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>(loadOcorrencias);
@@ -19,6 +20,7 @@ const Index = () => {
   const [editOcorrencia, setEditOcorrencia] = useState<Ocorrencia | null>(null);
   const [showCadastro, setShowCadastro] = useState(false);
   const [showEditRNC, setShowEditRNC] = useState(false);
+  const [enviarOcorrencia, setEnviarOcorrencia] = useState<Ocorrencia | null>(null);
 
   useEffect(() => { saveOcorrencias(ocorrencias); }, [ocorrencias]);
   useEffect(() => { saveFornecedores(fornecedores); }, [fornecedores]);
@@ -120,6 +122,7 @@ const Index = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onResolve={handleResolve}
+          onEnviar={(o) => setEnviarOcorrencia(o)}
         />
 
         {/* Footer */}
@@ -151,6 +154,14 @@ const Index = () => {
           fornecedores={fornecedores}
           onSave={handleSaveFornecedor}
           onClose={() => setShowCadastro(false)}
+        />
+      )}
+
+      {enviarOcorrencia && (
+        <RelatorioEmail
+          ocorrencia={enviarOcorrencia}
+          fornecedor={fornecedores.find((f) => f.id === enviarOcorrencia.fornecedorId)}
+          onClose={() => setEnviarOcorrencia(null)}
         />
       )}
     </div>
