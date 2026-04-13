@@ -48,8 +48,8 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         status: {
-          aberto: "hsl(var(--status-aberto))",
-          "aberto-bg": "hsl(var(--status-aberto-bg))",
+          pendente: "hsl(var(--status-pendente))",
+          "pendente-bg": "hsl(var(--status-pendente-bg))",
           andamento: "hsl(var(--status-andamento))",
           "andamento-bg": "hsl(var(--status-andamento-bg))",
           resolvido: "hsl(var(--status-resolvido))",
@@ -75,20 +75,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
