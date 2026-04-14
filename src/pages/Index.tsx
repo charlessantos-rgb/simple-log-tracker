@@ -60,59 +60,69 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-primary px-6 py-3">
-        <div className="mx-auto max-w-7xl flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded bg-primary-foreground/20 flex items-center justify-center">
-              <span className="text-primary-foreground font-extrabold text-xl">A</span>
+      <header className="bg-primary px-6 py-0 shadow-lg">
+        <div className="mx-auto max-w-7xl flex items-center justify-between h-16">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 rounded-lg bg-primary-foreground/15 flex items-center justify-center border border-primary-foreground/20">
+              <span className="text-primary-foreground font-extrabold text-lg">A</span>
             </div>
-            <div className="h-8 w-px bg-primary-foreground/30" />
+            <div className="h-6 w-px bg-primary-foreground/20" />
             <div>
-              <h1 className="text-lg font-bold text-primary-foreground">Sistema RNC</h1>
-              <p className="text-xs text-primary-foreground/70">Gestão de Não Conformidades</p>
+              <h1 className="text-base font-bold text-primary-foreground leading-tight">Sistema RNC</h1>
+              <p className="text-[11px] text-primary-foreground/60">Gestão de Não Conformidades</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <nav className="flex items-center gap-1.5">
             <button
               onClick={() => setShowNovaRNC(true)}
-              className="inline-flex items-center gap-2 border border-primary-foreground/30 px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary-foreground/10 transition-colors"
+              className="inline-flex items-center gap-1.5 bg-primary-foreground/10 hover:bg-primary-foreground/20 border border-primary-foreground/20 rounded-md px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               Nova RNC
             </button>
             <button
               onClick={() => setShowCadastro(true)}
-              className="inline-flex items-center gap-2 border border-primary-foreground/30 px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary-foreground/10 transition-colors"
+              className="inline-flex items-center gap-1.5 hover:bg-primary-foreground/10 border border-primary-foreground/15 rounded-md px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors"
             >
-              Cadastro
-            </button>
-            <button
-              onClick={() => setShowEditRNC(true)}
-              className="inline-flex items-center gap-2 border border-primary-foreground/30 px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary-foreground/10 transition-colors"
-            >
-              Editar RNC
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              Fornecedores
             </button>
             <button
               onClick={() => {
                 setOcorrencias(loadOcorrencias());
                 setFornecedores(loadFornecedores());
               }}
-              className="inline-flex items-center gap-2 border border-primary-foreground/30 px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary-foreground/10 transition-colors"
+              className="inline-flex items-center gap-1.5 hover:bg-primary-foreground/10 border border-primary-foreground/15 rounded-md px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors"
             >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
               Atualizar
             </button>
-          </div>
+          </nav>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-6 space-y-6">
         {/* Painel */}
         <div>
-          <h2 className="text-3xl font-extrabold text-primary mb-1">Painel</h2>
-          <p className="text-sm text-muted-foreground mb-4">Visão geral do sistema de gestão de não conformidades</p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-extrabold text-foreground">Painel de Controle</h2>
+              <p className="text-sm text-muted-foreground">Visão geral do sistema de gestão de não conformidades</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {new Date().toLocaleDateString("pt-BR", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            </div>
+          </div>
           <Dashboard ocorrencias={ocorrencias} fornecedores={fornecedores} />
         </div>
 
@@ -126,8 +136,9 @@ const Index = () => {
         />
 
         {/* Footer */}
-        <footer className="text-center text-xs text-muted-foreground py-4 border-t">
-          Desenvolvido por Charles Santos · VBA, C# Automação · ©2025 · ANDRA 50 Anos
+        <footer className="text-center text-xs text-muted-foreground py-6 border-t">
+          <p className="font-medium">Andra S.A. Electric Solutions · 50 Anos</p>
+          <p className="mt-1">Desenvolvido por Charles Santos · ©2025</p>
         </footer>
       </main>
 

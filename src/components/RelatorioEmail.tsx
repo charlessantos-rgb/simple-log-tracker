@@ -158,8 +158,11 @@ export function RelatorioEmail({ ocorrencia, fornecedor, onClose }: RelatorioEma
       `Conferente: ${ocorrencia.conferente || "N/A"}\n\n` +
       `Atenciosamente,\nAndra Materiais Elétricos`
     );
-    const destinatario = fornecedor?.email ? encodeURIComponent(fornecedor.email) : "";
-    window.open(`mailto:${destinatario}?subject=${assunto}&body=${corpo}`, "_self");
+    const destinatario = fornecedor?.email || "";
+    window.open(
+      `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(destinatario)}&su=${assunto}&body=${corpo}`,
+      "_blank"
+    );
   }
 
   function handleCopyHTML() {
