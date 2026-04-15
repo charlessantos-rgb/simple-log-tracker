@@ -14,6 +14,7 @@ export interface MaterialNaoConforme {
   descricao: string;
   quantidade: number;
   motivo: string;
+  valorUnitario: number;
 }
 
 export interface Ocorrencia {
@@ -80,4 +81,12 @@ export function loadFornecedores(): Fornecedor[] {
 
 export function saveFornecedores(data: Fornecedor[]) {
   localStorage.setItem("rnc_fornecedores", JSON.stringify(data));
+}
+
+export function calcularValorTotal(materiais: MaterialNaoConforme[]): number {
+  return materiais.reduce((acc, m) => acc + (m.valorUnitario || 0) * (m.quantidade || 0), 0);
+}
+
+export function formatarMoeda(valor: number): string {
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
