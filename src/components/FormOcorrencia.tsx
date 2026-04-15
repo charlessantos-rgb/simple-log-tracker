@@ -6,6 +6,7 @@ import {
   Status,
   STATUS_OPTIONS,
   gerarProtocolo,
+  formatarMoeda,
 } from "@/lib/rnc-types";
 
 interface FormOcorrenciaProps {
@@ -21,6 +22,7 @@ const emptyMaterial: MaterialNaoConforme = {
   descricao: "",
   quantidade: 0,
   motivo: "",
+  valorUnitario: 0,
 };
 
 const MOTIVOS = [
@@ -48,7 +50,6 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
   const [descricao, setDescricao] = useState(editData?.descricao || "");
   const [conferente, setConferente] = useState(editData?.conferente || "");
 
-  // Material form
   const [matForm, setMatForm] = useState<MaterialNaoConforme>({ ...emptyMaterial });
 
   const selectedFornecedor = fornecedores.find((f) => f.id === fornecedorId);
@@ -87,6 +88,7 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
   }
 
   const protocolo = editData?.protocolo || gerarProtocolo();
+  const totalMateriais = materiais.reduce((acc, m) => acc + (m.valorUnitario || 0) * (m.quantidade || 0), 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 backdrop-blur-sm overflow-y-auto py-4" onClick={onClose}>
@@ -121,7 +123,7 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
               </span>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <span className="font-semibold text-foreground">Registro de Nova Não Conformidade - Protocolo</span>
+              <span className="font-semibold text-foreground">Protocolo</span>
               <span className="border bg-background px-2 py-1 text-xs font-mono text-foreground">{protocolo}</span>
             </div>
           </div>
@@ -213,6 +215,11 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
                   className="border bg-background px-2 py-1 text-sm text-foreground w-20 focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
               <div className="flex flex-col">
+                <label className="text-xs font-medium text-foreground">Valor Unit. (R$)</label>
+                <input type="number" step="0.01" value={matForm.valorUnitario || ""} onChange={(e) => setMatForm({ ...matForm, valorUnitario: Number(e.target.value) })}
+                  className="border bg-background px-2 py-1 text-sm text-foreground w-28 focus:outline-none focus:ring-1 focus:ring-ring" />
+              </div>
+              <div className="flex flex-col">
                 <label className="text-xs font-medium text-foreground">Motivo</label>
                 <select value={matForm.motivo} onChange={(e) => setMatForm({ ...matForm, motivo: e.target.value })}
                   className="border bg-background px-2 py-1 text-sm text-foreground w-44 focus:outline-none focus:ring-1 focus:ring-ring">
@@ -223,7 +230,7 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
             </div>
 
             {/* Material list */}
-            <div className="border bg-background max-h-32 overflow-y-auto">
+            <div className="border bg-background max-h-40 overflow-y-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b bg-muted/50">
@@ -232,6 +239,8 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
                     <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Cód. Fornecedor</th>
                     <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Descrição</th>
                     <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Qtd</th>
+                    <th className="px-2 py-1 text-right font-semibold text-muted-foreground">Valor Unit.</th>
+                    <th className="px-2 py-1 text-right font-semibold text-muted-foreground">Subtotal</th>
                     <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Motivo</th>
                   </tr>
                 </thead>
@@ -243,6 +252,8 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
                       <td className="px-2 py-1 text-foreground">{m.codigoFornecedor}</td>
                       <td className="px-2 py-1 text-foreground">{m.descricao}</td>
                       <td className="px-2 py-1 text-foreground">{m.quantidade}</td>
+                      <td className="px-2 py-1 text-right text-foreground">{formatarMoeda(m.valorUnitario || 0)}</td>
+                      <td className="px-2 py-1 text-right font-medium text-foreground">{formatarMoeda((m.valorUnitario || 0) * (m.quantidade || 0))}</td>
                       <td className="px-2 py-1 text-foreground">{m.motivo}</td>
                     </tr>
                   ))}
@@ -250,16 +261,20 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
               </table>
             </div>
 
+            {/* Total + Actions */}
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2 text-sm text-foreground">
                 <input type="checkbox" checked={embalagemLacrada} onChange={(e) => setEmbalagemLacrada(e.target.checked)} />
-                Embalagem lacrada Fornecedor / Não manipulada
+                Embalagem lacrada
               </label>
               <label className="flex items-center gap-2 text-sm text-foreground">
                 <input type="checkbox" checked={embalagemAberta} onChange={(e) => setEmbalagemAberta(e.target.checked)} />
-                Embalagem aberta / Manipulada
+                Embalagem aberta
               </label>
-              <div className="ml-auto flex gap-2">
+              <span className="text-sm font-bold text-foreground ml-auto">
+                Total: {formatarMoeda(totalMateriais)}
+              </span>
+              <div className="flex gap-2">
                 <button type="button" onClick={addMaterial}
                   className="bg-status-resolvido px-4 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 transition-opacity">
                   Adicionar
