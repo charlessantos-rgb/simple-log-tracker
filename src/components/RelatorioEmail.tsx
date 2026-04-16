@@ -199,11 +199,36 @@ export function RelatorioEmail({ ocorrencia, fornecedor, onClose }: RelatorioEma
     );
   }
 
-  function handleCopyHTML() {
+  function handleOpenReport() {
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(html);
     win.document.close();
+  }
+
+  async function handleCopyRichHTML() {
+    try {
+      // Copia como rich HTML para colar diretamente no Gmail mantendo o visual
+      const blobHtml = new Blob([html], { type: "text/html" });
+      const blobText = new Blob(
+        [`Relatório RNC ${ocorrencia.protocolo} - veja em HTML.`],
+        { type: "text/plain" }
+      );
+      const item = new ClipboardItem({
+        "text/html": blobHtml,
+        "text/plain": blobText,
+      });
+      await navigator.clipboard.write([item]);
+      alert(
+        "✓ Relatório copiado!\n\nAgora abra o Gmail, clique em 'Escrever' e cole (Ctrl+V) no corpo do e-mail.\nO visual completo (tabela, cores, logo) será preservado."
+      );
+    } catch (err) {
+      // Fallback: abre o relatório em nova aba para o usuário copiar manualmente
+      handleOpenReport();
+      alert(
+        "Não foi possível copiar automaticamente. O relatório foi aberto em nova aba — selecione tudo (Ctrl+A), copie (Ctrl+C) e cole no Gmail."
+      );
+    }
   }
 
   return (
