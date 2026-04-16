@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Ocorrencia,
   Fornecedor,
@@ -7,6 +7,7 @@ import {
   loadFornecedores,
   saveFornecedores,
 } from "@/lib/rnc-types";
+import { exportarParaExcel, importarDeExcel } from "@/lib/excel-db";
 import { Dashboard } from "@/components/Dashboard";
 import { DashboardFinanceiro } from "@/components/DashboardFinanceiro";
 import { TabelaOcorrencias } from "@/components/TabelaOcorrencias";
@@ -24,9 +25,29 @@ const Index = () => {
   const [showEditRNC, setShowEditRNC] = useState(false);
   const [enviarOcorrencia, setEnviarOcorrencia] = useState<Ocorrencia | null>(null);
   const [showRelatorio, setShowRelatorio] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { saveOcorrencias(ocorrencias); }, [ocorrencias]);
   useEffect(() => { saveFornecedores(fornecedores); }, [fornecedores]);
+
+  async function handleImportarExcel(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!confirm("Atenção: importar uma planilha SUBSTITUIRÁ todos os dados atuais. Deseja continuar?")) {
+      e.target.value = "";
+      return;
+    }
+    try {
+      const r = await importarDeExcel(file);
+      setOcorrencias(loadOcorrencias());
+      setFornecedores(loadFornecedores());
+      alert(`✓ Importação concluída!\n\n• ${r.ocorrencias} ocorrências\n• ${r.materiais} materiais\n• ${r.fornecedores} fornecedores`);
+    } catch (err: any) {
+      alert(`Erro ao importar: ${err.message || err}`);
+    } finally {
+      e.target.value = "";
+    }
+  }
 
   function handleSaveOcorrencia(o: Ocorrencia) {
     setOcorrencias((prev) => {
@@ -102,6 +123,33 @@ const Index = () => {
               </svg>
               Relatório
             </button>
+            <button
+              onClick={exportarParaExcel}
+              className="inline-flex items-center gap-1.5 hover:bg-primary-foreground/10 border border-primary-foreground/15 rounded-md px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors"
+              title="Baixar todos os dados como planilha Excel"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
+              </svg>
+              Exportar Excel
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 hover:bg-primary-foreground/10 border border-primary-foreground/15 rounded-md px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-colors"
+              title="Importar dados de uma planilha Excel"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M17 8l-5-5m0 0L7 8m5-5v12" />
+              </svg>
+              Importar Excel
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleImportarExcel}
+              className="hidden"
+            />
             <button
               onClick={() => {
                 setOcorrencias(loadOcorrencias());
