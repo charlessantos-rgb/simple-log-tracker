@@ -241,16 +241,23 @@ export function RelatorioEmail({ ocorrencia, fornecedor, onClose }: RelatorioEma
           <button onClick={onClose} className="text-primary-foreground/70 hover:text-primary-foreground text-lg leading-none">&times;</button>
         </div>
 
-        <div className="flex items-center gap-2 p-4 border-b bg-muted/30">
-          <button onClick={handleEmail}
+        <div className="flex flex-wrap items-center gap-2 p-4 border-b bg-muted/30">
+          <button onClick={handleCopyRichHTML}
             className="inline-flex items-center gap-2 bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Copiar para Gmail (com visual)
+          </button>
+          <button onClick={handleEmail}
+            className="inline-flex items-center gap-2 border border-foreground/20 px-5 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            Enviar via Gmail
+            Abrir Gmail (texto)
           </button>
-          <button onClick={handleCopyHTML}
-            className="inline-flex items-center gap-2 bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity">
+          <button onClick={handleOpenReport}
+            className="inline-flex items-center gap-2 border border-foreground/20 px-5 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
@@ -261,7 +268,7 @@ export function RelatorioEmail({ ocorrencia, fornecedor, onClose }: RelatorioEma
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            Imprimir
+            Imprimir / PDF
           </button>
         </div>
 
