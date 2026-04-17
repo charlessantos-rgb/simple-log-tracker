@@ -1,17 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Ocorrencia,
   Fornecedor,
   MaterialNaoConforme,
   Status,
   STATUS_OPTIONS,
+  Conferente,
   gerarProtocolo,
   formatarMoeda,
+  loadConferentes,
+  gerarDescricaoAutomatica,
 } from "@/lib/rnc-types";
 
 interface FormOcorrenciaProps {
   editData?: Ocorrencia | null;
   fornecedores: Fornecedor[];
+  fornecedorPreSelecionadoId?: string;
   onSave: (o: Ocorrencia) => void;
   onClose: () => void;
 }
@@ -34,11 +38,12 @@ const MOTIVOS = [
   "Outros",
 ];
 
-export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: FormOcorrenciaProps) {
+export function FormOcorrencia({ editData, fornecedores, fornecedorPreSelecionadoId, onSave, onClose }: FormOcorrenciaProps) {
   const isEdit = !!editData;
+  const [conferentesList] = useState<Conferente[]>(() => loadConferentes().filter((c) => c.ativo));
 
   const [status, setStatus] = useState<Status>(editData?.status || "Pendente");
-  const [fornecedorId, setFornecedorId] = useState(editData?.fornecedorId || "");
+  const [fornecedorId, setFornecedorId] = useState(editData?.fornecedorId || fornecedorPreSelecionadoId || "");
   const [notaFiscal, setNotaFiscal] = useState(editData?.notaFiscal || "");
   const [serie, setSerie] = useState(editData?.serie || "");
   const [chaveAcesso, setChaveAcesso] = useState(editData?.chaveAcesso || "");
@@ -48,11 +53,19 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
   const [embalagemLacrada, setEmbalagemLacrada] = useState(editData?.embalagemLacrada || false);
   const [embalagemAberta, setEmbalagemAberta] = useState(editData?.embalagemAberta || false);
   const [descricao, setDescricao] = useState(editData?.descricao || "");
+  const [descricaoAuto, setDescricaoAuto] = useState(!isEdit);
   const [conferente, setConferente] = useState(editData?.conferente || "");
 
   const [matForm, setMatForm] = useState<MaterialNaoConforme>({ ...emptyMaterial });
 
   const selectedFornecedor = fornecedores.find((f) => f.id === fornecedorId);
+
+  const descricaoSugerida = useMemo(() => gerarDescricaoAutomatica(materiais), [materiais]);
+
+  // Atualiza descrição automaticamente quando materiais mudam (se modo auto ativo)
+  useEffect(() => {
+    if (descricaoAuto) setDescricao(descricaoSugerida);
+  }, [descricaoSugerida, descricaoAuto]);
 
   function addMaterial() {
     if (!matForm.descricao.trim()) return;
@@ -60,8 +73,12 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
     setMatForm({ ...emptyMaterial });
   }
 
-  function removeMaterial() {
-    setMateriais((prev) => prev.slice(0, -1));
+  function removeMaterial(idx?: number) {
+    if (typeof idx === "number") {
+      setMateriais((prev) => prev.filter((_, i) => i !== idx));
+    } else {
+      setMateriais((prev) => prev.slice(0, -1));
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -92,16 +109,15 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-foreground/40 backdrop-blur-sm overflow-y-auto py-4" onClick={onClose}>
-      <div className="w-full max-w-4xl mx-4 border bg-card shadow-xl my-4" onClick={(e) => e.stopPropagation()}>
-        {/* Title bar */}
-        <div className="bg-muted px-4 py-2 flex items-center justify-between border-b">
-          <span className="text-sm font-semibold text-foreground">
-            {isEdit ? "Editar RNC" : "Abrir Ocorrência"}
+      <div className="w-full max-w-4xl mx-4 border bg-card shadow-xl my-4 rounded-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-primary px-4 py-3 flex items-center justify-between">
+          <span className="text-sm font-bold text-primary-foreground">
+            {isEdit ? "Editar RNC" : "Nova Ocorrência (RNC)"}
           </span>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-lg leading-none">&times;</button>
+          <button onClick={onClose} className="text-primary-foreground/70 hover:text-primary-foreground text-xl leading-none">&times;</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
           {/* Status + Date + Protocolo */}
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
@@ -109,7 +125,7 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as Status)}
-                className="border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                className="border bg-background px-2 py-1 text-sm text-foreground rounded focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 {STATUS_OPTIONS.map((s) => (
                   <option key={s} value={s}>{s.toUpperCase()}</option>
@@ -118,25 +134,26 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
             </div>
             <div className="flex items-center gap-2">
               <label className="font-medium text-foreground">Data Abertura</label>
-              <span className="border bg-background px-2 py-1 text-sm text-foreground">
+              <span className="border bg-background px-2 py-1 text-sm text-foreground rounded">
                 {new Date(editData?.dataCriacao || Date.now()).toLocaleDateString("pt-BR")}
               </span>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <span className="font-semibold text-foreground">Protocolo</span>
-              <span className="border bg-background px-2 py-1 text-xs font-mono text-foreground">{protocolo}</span>
+              <span className="border bg-background px-2 py-1 text-xs font-mono text-foreground rounded">{protocolo}</span>
             </div>
           </div>
 
-          {/* Dados do Fornecedor */}
-          <fieldset className="border p-3 space-y-2">
+          {/* Fornecedor */}
+          <fieldset className="border rounded p-3 space-y-2">
             <legend className="px-2 text-sm font-bold text-foreground">Dados do Fornecedor</legend>
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-foreground w-20">Fornecedor</label>
               <select
+                required
                 value={fornecedorId}
                 onChange={(e) => setFornecedorId(e.target.value)}
-                className="flex-1 border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                className="flex-1 border bg-background px-2 py-1 text-sm text-foreground rounded focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="">Selecione...</option>
                 {fornecedores.map((f) => (
@@ -144,183 +161,227 @@ export function FormOcorrencia({ editData, fornecedores, onSave, onClose }: Form
                 ))}
               </select>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-foreground">CNPJ</label>
                 <input
                   value={selectedFornecedor?.cnpj || cnpj}
                   onChange={(e) => setCnpj(e.target.value)}
                   readOnly={!!selectedFornecedor}
-                  className="border bg-background px-2 py-1 text-sm text-foreground w-48 focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="border bg-background px-2 py-1 text-sm text-foreground w-48 rounded focus:outline-none focus:ring-1 focus:ring-ring"
                 />
               </div>
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-foreground">Telefone</label>
-                <span className="border bg-background px-2 py-1 text-sm text-foreground w-40">
+                <span className="border bg-background px-2 py-1 text-sm text-foreground w-40 rounded">
                   {selectedFornecedor?.telefone || "—"}
                 </span>
               </div>
             </div>
           </fieldset>
 
-          {/* Dados da Nota Fiscal */}
-          <fieldset className="border p-3 space-y-2">
+          {/* Nota Fiscal */}
+          <fieldset className="border rounded p-3 space-y-2">
             <legend className="px-2 text-sm font-bold text-foreground">Dados da Nota Fiscal</legend>
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-1">
-                <label className="text-sm font-medium text-foreground">Nota Fiscal</label>
+                <label className="text-sm font-medium text-foreground">NF</label>
                 <input value={notaFiscal} onChange={(e) => setNotaFiscal(e.target.value)}
-                  className="border bg-background px-2 py-1 text-sm text-foreground w-28 focus:outline-none focus:ring-1 focus:ring-ring" />
+                  className="border bg-background px-2 py-1 text-sm text-foreground w-28 rounded focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
               <div className="flex items-center gap-1">
                 <label className="text-sm font-medium text-foreground">Série</label>
                 <input value={serie} onChange={(e) => setSerie(e.target.value)}
-                  className="border bg-background px-2 py-1 text-sm text-foreground w-20 focus:outline-none focus:ring-1 focus:ring-ring" />
+                  className="border bg-background px-2 py-1 text-sm text-foreground w-20 rounded focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
-              <div className="flex items-center gap-1">
-                <label className="text-sm font-medium text-foreground">Chave Acesso</label>
+              <div className="flex items-center gap-1 flex-1 min-w-[260px]">
+                <label className="text-sm font-medium text-foreground whitespace-nowrap">Chave Acesso</label>
                 <input value={chaveAcesso} onChange={(e) => setChaveAcesso(e.target.value)}
-                  className="border bg-background px-2 py-1 text-sm text-foreground flex-1 min-w-[200px] focus:outline-none focus:ring-1 focus:ring-ring" />
+                  className="border bg-background px-2 py-1 text-sm text-foreground flex-1 rounded focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
               <div className="flex items-center gap-1">
-                <label className="text-sm font-medium text-foreground">O.C. | Pedido</label>
+                <label className="text-sm font-medium text-foreground">O.C.</label>
                 <input value={ordemCompra} onChange={(e) => setOrdemCompra(e.target.value)}
-                  className="border bg-background px-2 py-1 text-sm text-foreground w-32 focus:outline-none focus:ring-1 focus:ring-ring" />
+                  className="border bg-background px-2 py-1 text-sm text-foreground w-32 rounded focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
             </div>
           </fieldset>
 
-          {/* Material Não Conforme */}
-          <fieldset className="border p-3 space-y-2">
+          {/* Materiais */}
+          <fieldset className="border rounded p-3 space-y-2">
             <legend className="px-2 text-sm font-bold text-foreground">Material Não Conforme</legend>
             <div className="flex flex-wrap items-end gap-2">
               <div className="flex flex-col">
-                <label className="text-xs font-medium text-foreground">Código Andra</label>
+                <label className="text-xs font-medium text-foreground">Cód. Andra</label>
                 <input value={matForm.codigoAndra} onChange={(e) => setMatForm({ ...matForm, codigoAndra: e.target.value })}
-                  className="border bg-background px-2 py-1 text-sm text-foreground w-28 focus:outline-none focus:ring-1 focus:ring-ring" />
+                  className="border bg-background px-2 py-1 text-sm w-28 rounded focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
               <div className="flex flex-col">
-                <label className="text-xs font-medium text-foreground">Código Fornecedor</label>
+                <label className="text-xs font-medium text-foreground">Cód. Forn.</label>
                 <input value={matForm.codigoFornecedor} onChange={(e) => setMatForm({ ...matForm, codigoFornecedor: e.target.value })}
-                  className="border bg-background px-2 py-1 text-sm text-foreground w-28 focus:outline-none focus:ring-1 focus:ring-ring" />
+                  className="border bg-background px-2 py-1 text-sm w-28 rounded focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
-              <div className="flex flex-col flex-1">
+              <div className="flex flex-col flex-1 min-w-[180px]">
                 <label className="text-xs font-medium text-foreground">Descrição</label>
                 <input value={matForm.descricao} onChange={(e) => setMatForm({ ...matForm, descricao: e.target.value })}
-                  className="border bg-background px-2 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring" />
+                  className="border bg-background px-2 py-1 text-sm rounded focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
               <div className="flex flex-col">
-                <label className="text-xs font-medium text-foreground">Quantidade</label>
+                <label className="text-xs font-medium text-foreground">Qtd</label>
                 <input type="number" value={matForm.quantidade || ""} onChange={(e) => setMatForm({ ...matForm, quantidade: Number(e.target.value) })}
-                  className="border bg-background px-2 py-1 text-sm text-foreground w-20 focus:outline-none focus:ring-1 focus:ring-ring" />
+                  className="border bg-background px-2 py-1 text-sm w-20 rounded focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
               <div className="flex flex-col">
-                <label className="text-xs font-medium text-foreground">Valor Unit. (R$)</label>
+                <label className="text-xs font-medium text-foreground">Vlr Unit. (R$)</label>
                 <input type="number" step="0.01" value={matForm.valorUnitario || ""} onChange={(e) => setMatForm({ ...matForm, valorUnitario: Number(e.target.value) })}
-                  className="border bg-background px-2 py-1 text-sm text-foreground w-28 focus:outline-none focus:ring-1 focus:ring-ring" />
+                  className="border bg-background px-2 py-1 text-sm w-28 rounded focus:outline-none focus:ring-1 focus:ring-ring" />
               </div>
               <div className="flex flex-col">
                 <label className="text-xs font-medium text-foreground">Motivo</label>
                 <select value={matForm.motivo} onChange={(e) => setMatForm({ ...matForm, motivo: e.target.value })}
-                  className="border bg-background px-2 py-1 text-sm text-foreground w-44 focus:outline-none focus:ring-1 focus:ring-ring">
+                  className="border bg-background px-2 py-1 text-sm w-44 rounded focus:outline-none focus:ring-1 focus:ring-ring">
                   <option value="">Selecione...</option>
                   {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
+              <button type="button" onClick={addMaterial}
+                className="bg-status-resolvido px-4 py-1.5 text-xs font-bold text-primary-foreground rounded hover:opacity-90 transition-opacity">
+                + Adicionar
+              </button>
             </div>
 
-            {/* Material list */}
-            <div className="border bg-background max-h-40 overflow-y-auto">
+            <div className="border rounded bg-background max-h-44 overflow-y-auto">
               <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Nº</th>
-                    <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Cód. Andra</th>
-                    <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Cód. Fornecedor</th>
-                    <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Descrição</th>
-                    <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Qtd</th>
-                    <th className="px-2 py-1 text-right font-semibold text-muted-foreground">Valor Unit.</th>
-                    <th className="px-2 py-1 text-right font-semibold text-muted-foreground">Subtotal</th>
-                    <th className="px-2 py-1 text-left font-semibold text-muted-foreground">Motivo</th>
+                <thead className="sticky top-0 bg-muted/80 backdrop-blur">
+                  <tr className="border-b">
+                    <th className="px-2 py-1.5 text-left font-semibold text-muted-foreground">#</th>
+                    <th className="px-2 py-1.5 text-left font-semibold text-muted-foreground">Cód. Andra</th>
+                    <th className="px-2 py-1.5 text-left font-semibold text-muted-foreground">Cód. Forn.</th>
+                    <th className="px-2 py-1.5 text-left font-semibold text-muted-foreground">Descrição</th>
+                    <th className="px-2 py-1.5 text-center font-semibold text-muted-foreground">Qtd</th>
+                    <th className="px-2 py-1.5 text-right font-semibold text-muted-foreground">Vlr Unit.</th>
+                    <th className="px-2 py-1.5 text-right font-semibold text-muted-foreground">Subtotal</th>
+                    <th className="px-2 py-1.5 text-left font-semibold text-muted-foreground">Motivo</th>
+                    <th className="px-2 py-1.5"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {materiais.map((m, i) => (
-                    <tr key={i} className="border-b">
-                      <td className="px-2 py-1 text-foreground">{i + 1}</td>
-                      <td className="px-2 py-1 text-foreground">{m.codigoAndra}</td>
-                      <td className="px-2 py-1 text-foreground">{m.codigoFornecedor}</td>
-                      <td className="px-2 py-1 text-foreground">{m.descricao}</td>
-                      <td className="px-2 py-1 text-foreground">{m.quantidade}</td>
-                      <td className="px-2 py-1 text-right text-foreground">{formatarMoeda(m.valorUnitario || 0)}</td>
-                      <td className="px-2 py-1 text-right font-medium text-foreground">{formatarMoeda((m.valorUnitario || 0) * (m.quantidade || 0))}</td>
-                      <td className="px-2 py-1 text-foreground">{m.motivo}</td>
-                    </tr>
-                  ))}
+                  {materiais.length === 0 ? (
+                    <tr><td colSpan={9} className="px-2 py-4 text-center text-muted-foreground">Nenhum material adicionado</td></tr>
+                  ) : (
+                    materiais.map((m, i) => (
+                      <tr key={i} className="border-b">
+                        <td className="px-2 py-1">{i + 1}</td>
+                        <td className="px-2 py-1">{m.codigoAndra}</td>
+                        <td className="px-2 py-1">{m.codigoFornecedor}</td>
+                        <td className="px-2 py-1">{m.descricao}</td>
+                        <td className="px-2 py-1 text-center">{m.quantidade}</td>
+                        <td className="px-2 py-1 text-right">{formatarMoeda(m.valorUnitario || 0)}</td>
+                        <td className="px-2 py-1 text-right font-semibold">{formatarMoeda((m.valorUnitario || 0) * (m.quantidade || 0))}</td>
+                        <td className="px-2 py-1">{m.motivo}</td>
+                        <td className="px-2 py-1 text-right">
+                          <button type="button" onClick={() => removeMaterial(i)} className="text-destructive hover:underline text-xs">Remover</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
 
-            {/* Total + Actions */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <label className="flex items-center gap-2 text-sm text-foreground">
                 <input type="checkbox" checked={embalagemLacrada} onChange={(e) => setEmbalagemLacrada(e.target.checked)} />
                 Embalagem lacrada
               </label>
               <label className="flex items-center gap-2 text-sm text-foreground">
                 <input type="checkbox" checked={embalagemAberta} onChange={(e) => setEmbalagemAberta(e.target.checked)} />
-                Embalagem aberta
+                Embalagem aberta / manipulada
               </label>
               <span className="text-sm font-bold text-foreground ml-auto">
-                Total: {formatarMoeda(totalMateriais)}
+                Total interno: {formatarMoeda(totalMateriais)}
               </span>
-              <div className="flex gap-2">
-                <button type="button" onClick={addMaterial}
-                  className="bg-status-resolvido px-4 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 transition-opacity">
-                  Adicionar
-                </button>
-                <button type="button" onClick={removeMaterial}
-                  className="bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground hover:opacity-90 transition-opacity">
-                  Remover
-                </button>
-              </div>
             </div>
           </fieldset>
 
-          {/* Descrição da Ocorrência */}
-          <fieldset className="border p-3 space-y-2">
+          {/* Descrição automática */}
+          <fieldset className="border rounded p-3 space-y-2">
             <legend className="px-2 text-sm font-bold text-foreground">Descrição da Ocorrência</legend>
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 text-xs text-foreground">
+                <input
+                  type="checkbox"
+                  checked={descricaoAuto}
+                  onChange={(e) => {
+                    setDescricaoAuto(e.target.checked);
+                    if (e.target.checked) setDescricao(descricaoSugerida);
+                  }}
+                />
+                Gerar descrição automaticamente a partir dos materiais e motivos
+              </label>
+              {!descricaoAuto && descricaoSugerida && (
+                <button
+                  type="button"
+                  onClick={() => setDescricao(descricaoSugerida)}
+                  className="text-xs text-accent-foreground bg-accent/40 hover:bg-accent/60 px-2 py-1 rounded transition-colors"
+                >
+                  Aplicar sugestão automática
+                </button>
+              )}
+            </div>
             <textarea
               value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
+              onChange={(e) => {
+                setDescricao(e.target.value);
+                setDescricaoAuto(false);
+              }}
               rows={4}
-              className="w-full border bg-background px-3 py-2 text-sm text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-              placeholder="Descreva a ocorrência..."
+              className="w-full border border-input bg-background px-3 py-2 text-sm text-foreground rounded resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+              placeholder="A descrição será gerada automaticamente conforme você adicionar materiais com motivo..."
             />
           </fieldset>
 
-          {/* Responsável */}
-          <fieldset className="border p-3">
-            <legend className="px-2 text-sm font-bold text-foreground">Responsável</legend>
-            <div className="flex items-center gap-2">
+          {/* Conferente */}
+          <fieldset className="border rounded p-3">
+            <legend className="px-2 text-sm font-bold text-foreground">Responsável pela Conferência</legend>
+            <div className="flex items-center gap-2 flex-wrap">
               <label className="text-sm font-medium text-foreground">Conferente</label>
-              <input
-                value={conferente}
-                onChange={(e) => setConferente(e.target.value)}
-                className="border bg-background px-2 py-1 text-sm text-foreground w-64 focus:outline-none focus:ring-1 focus:ring-ring"
-              />
+              {conferentesList.length > 0 ? (
+                <select
+                  required
+                  value={conferente}
+                  onChange={(e) => setConferente(e.target.value)}
+                  className="border bg-background px-2 py-1.5 text-sm text-foreground w-72 rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option value="">Selecione um conferente...</option>
+                  {conferentesList.map((c) => (
+                    <option key={c.id} value={c.nome}>
+                      {c.nome}{c.setor ? ` — ${c.setor}` : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <>
+                  <input
+                    value={conferente}
+                    onChange={(e) => setConferente(e.target.value)}
+                    placeholder="Digite o nome (cadastre conferentes no painel admin)"
+                    className="border bg-background px-2 py-1 text-sm text-foreground w-80 rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                  />
+                  <span className="text-xs text-muted-foreground">Nenhum conferente cadastrado — peça ao admin</span>
+                </>
+              )}
             </div>
           </fieldset>
 
-          {/* Actions */}
           <div className="flex justify-end gap-2 pt-2">
-            <button type="submit"
-              className="bg-primary px-6 py-2 text-sm font-bold text-primary-foreground hover:opacity-90 transition-opacity">
-              Salvar
-            </button>
             <button type="button" onClick={onClose}
-              className="border px-6 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors">
+              className="border px-6 py-2 text-sm font-medium text-foreground rounded hover:bg-muted transition-colors">
               Cancelar
+            </button>
+            <button type="submit"
+              className="bg-primary px-6 py-2 text-sm font-bold text-primary-foreground rounded hover:opacity-90 transition-opacity">
+              Salvar RNC
             </button>
           </div>
         </form>
