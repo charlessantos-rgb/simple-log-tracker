@@ -6,6 +6,10 @@ export interface Fornecedor {
   cnpj: string;
   email: string;
   telefone: string;
+  endereco?: string;
+  contato?: string;
+  observacoes?: string;
+  dataCadastro?: string;
 }
 
 export interface MaterialNaoConforme {
@@ -36,6 +40,34 @@ export interface Ocorrencia {
   conferente: string;
 }
 
+export interface Conferente {
+  id: string;
+  nome: string;
+  setor?: string;
+  ativo: boolean;
+}
+
+export type UserRole = "admin" | "user";
+
+export interface Usuario {
+  id: string;
+  username: string;
+  nome: string;
+  email?: string;
+  role: UserRole;
+  passwordHash: string;
+  ativo: boolean;
+  dataCriacao: string;
+}
+
+export interface AppConfig {
+  remetenteNome: string;
+  remetenteCargo: string;
+  remetenteEmpresa: string;
+  remetenteSite: string;
+  destinatarioPadrao?: string;
+}
+
 export const STATUS_OPTIONS: Status[] = ["Pendente", "Em Andamento", "Resolvido", "Cancelado"];
 
 export const statusClasses: Record<Status, string> = {
@@ -57,36 +89,139 @@ export function gerarProtocolo(): string {
   return `RNC-${y}${m}${d}-${h}${min}${s}-${r}`;
 }
 
-export function loadOcorrencias(): Ocorrencia[] {
+// ============== Storage helpers ==============
+function load<T>(key: string, fallback: T): T {
   try {
-    const raw = localStorage.getItem("rnc_ocorrencias");
-    return raw ? JSON.parse(raw) : [];
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
-    return [];
+    return fallback;
   }
 }
-
-export function saveOcorrencias(data: Ocorrencia[]) {
-  localStorage.setItem("rnc_ocorrencias", JSON.stringify(data));
+function save<T>(key: string, data: T) {
+  localStorage.setItem(key, JSON.stringify(data));
 }
 
-export function loadFornecedores(): Fornecedor[] {
+export function loadOcorrencias(): Ocorrencia[] { return load<Ocorrencia[]>("rnc_ocorrencias", []); }
+export function saveOcorrencias(d: Ocorrencia[]) { save("rnc_ocorrencias", d); }
+
+export function loadFornecedores(): Fornecedor[] { return load<Fornecedor[]>("rnc_fornecedores", []); }
+export function saveFornecedores(d: Fornecedor[]) { save("rnc_fornecedores", d); }
+
+export function loadConferentes(): Conferente[] { return load<Conferente[]>("rnc_conferentes", []); }
+export function saveConferentes(d: Conferente[]) { save("rnc_conferentes", d); }
+
+export function loadUsuarios(): Usuario[] {
+  const list = load<Usuario[]>("rnc_usuarios", []);
+  // Bootstrap admin padrão na primeira execução
+  if (list.length === 0) {
+    const admin: Usuario = {
+      id: crypto.randomUUID(),
+      username: "admin",
+      nome: "Administrador",
+      role: "admin",
+      passwordHash: hashPassword("admin"),
+      ativo: true,
+      dataCriacao: new Date().toISOString(),
+    };
+    save("rnc_usuarios", [admin]);
+    return [admin];
+  }
+  return list;
+}
+export function saveUsuarios(d: Usuario[]) { save("rnc_usuarios", d); }
+
+const DEFAULT_CONFIG: AppConfig = {
+  remetenteNome: "Charles S Silva",
+  remetenteCargo: "Encarregado de Logística",
+  remetenteEmpresa: "Andra Materiais Elétricos",
+  remetenteSite: "www.andra.com.br",
+  destinatarioPadrao: "",
+};
+export function loadConfig(): AppConfig { return { ...DEFAULT_CONFIG, ...load<Partial<AppConfig>>("rnc_config", {}) }; }
+export function saveConfig(c: AppConfig) { save("rnc_config", c); }
+
+// ============== Auth ==============
+// Hash leve (não criptográfico) para uso 100% offline em ambiente interno.
+export function hashPassword(pw: string): string {
+  let h = 0;
+  const salt = "andra-rnc-50anos";
+  const s = salt + pw + salt;
+  for (let i = 0; i < s.length; i++) {
+    h = (h << 5) - h + s.charCodeAt(i);
+    h |= 0;
+  }
+  return `h_${(h >>> 0).toString(16)}_${s.length}`;
+}
+
+export function verificarLogin(username: string, password: string): Usuario | null {
+  const users = loadUsuarios();
+  const u = users.find((x) => x.username.toLowerCase() === username.toLowerCase() && x.ativo);
+  if (!u) return null;
+  return u.passwordHash === hashPassword(password) ? u : null;
+}
+
+const SESSION_KEY = "rnc_session";
+export function getSession(): Usuario | null {
   try {
-    const raw = localStorage.getItem("rnc_fornecedores");
-    return raw ? JSON.parse(raw) : [];
+    const raw = sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as Usuario;
   } catch {
-    return [];
+    return null;
   }
 }
-
-export function saveFornecedores(data: Fornecedor[]) {
-  localStorage.setItem("rnc_fornecedores", JSON.stringify(data));
+export function setSession(u: Usuario, persist: boolean) {
+  const data = JSON.stringify(u);
+  if (persist) localStorage.setItem(SESSION_KEY, data);
+  else sessionStorage.setItem(SESSION_KEY, data);
+}
+export function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(SESSION_KEY);
 }
 
+// ============== Cálculos & formatação ==============
 export function calcularValorTotal(materiais: MaterialNaoConforme[]): number {
   return materiais.reduce((acc, m) => acc + (m.valorUnitario || 0) * (m.quantidade || 0), 0);
 }
 
 export function formatarMoeda(valor: number): string {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+// ============== Descrição automática profissional ==============
+function pluralizarUnidade(qtd: number): string {
+  return qtd === 1 ? "unidade" : "unidades";
+}
+
+const FRASE_POR_MOTIVO: Record<string, (qtd: number, desc: string, codigo: string) => string> = {
+  "Quantidade divergente": (q, d, c) =>
+    `divergência de quantidade (${q} ${pluralizarUnidade(q)}) no material ${d}${c ? ` (cód. ${c})` : ""}`,
+  "Material danificado": (q, d, c) =>
+    `avaria em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
+  "Material incorreto": (q, d, c) =>
+    `envio incorreto de ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""} (item não corresponde ao pedido)`,
+  "Falta de material": (q, d, c) =>
+    `ausência de ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
+  "Validade vencida": (q, d, c) =>
+    `validade vencida em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
+  Outros: (q, d, c) =>
+    `não conformidade em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
+};
+
+export function gerarDescricaoAutomatica(materiais: MaterialNaoConforme[]): string {
+  const itens = materiais.filter((m) => m.descricao?.trim() && m.motivo?.trim());
+  if (itens.length === 0) return "";
+  const partes = itens.map((m) => {
+    const fn = FRASE_POR_MOTIVO[m.motivo] || FRASE_POR_MOTIVO["Outros"];
+    return fn(m.quantidade || 0, m.descricao.trim(), m.codigoAndra?.trim() || "");
+  });
+  let texto: string;
+  if (partes.length === 1) {
+    texto = partes[0];
+  } else {
+    texto = partes.slice(0, -1).join("; ") + " e " + partes[partes.length - 1];
+  }
+  return `Durante a conferência do recebimento foi constatada ${texto}. Solicitamos a regularização da pendência conforme procedimento de não conformidade.`;
 }
