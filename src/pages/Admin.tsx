@@ -186,6 +186,7 @@ export default function Admin() {
           {([
             { id: "conferentes", label: "Conferentes" },
             { id: "usuarios", label: "Usuários" },
+            { id: "motivos", label: "Motivos" },
             { id: "config", label: "Configurações" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
