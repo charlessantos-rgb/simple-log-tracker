@@ -66,6 +66,10 @@ export interface AppConfig {
   remetenteEmpresa: string;
   remetenteSite: string;
   destinatarioPadrao?: string;
+  /** E-mails sempre em CC ao enviar uma nova RNC ao fornecedor */
+  ccNovaRNC?: string[];
+  /** E-mails destinatários do Relatório Diário de ocorrências */
+  ccRelatorio?: string[];
 }
 
 export const STATUS_OPTIONS: Status[] = ["Pendente", "Em Andamento", "Resolvido", "Cancelado"];
@@ -137,6 +141,8 @@ const DEFAULT_CONFIG: AppConfig = {
   remetenteEmpresa: "Andra Materiais Elétricos",
   remetenteSite: "www.andra.com.br",
   destinatarioPadrao: "",
+  ccNovaRNC: [],
+  ccRelatorio: [],
 };
 export function loadConfig(): AppConfig { return { ...DEFAULT_CONFIG, ...load<Partial<AppConfig>>("rnc_config", {}) }; }
 export function saveConfig(c: AppConfig) { save("rnc_config", c); }
