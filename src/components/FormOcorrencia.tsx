@@ -9,6 +9,7 @@ import {
   gerarProtocolo,
   formatarMoeda,
   loadConferentes,
+  loadMotivos,
   gerarDescricaoAutomatica,
 } from "@/lib/rnc-types";
 
@@ -29,18 +30,10 @@ const emptyMaterial: MaterialNaoConforme = {
   valorUnitario: 0,
 };
 
-const MOTIVOS = [
-  "Quantidade divergente",
-  "Material danificado",
-  "Material incorreto",
-  "Falta de material",
-  "Validade vencida",
-  "Outros",
-];
-
 export function FormOcorrencia({ editData, fornecedores, fornecedorPreSelecionadoId, onSave, onClose }: FormOcorrenciaProps) {
   const isEdit = !!editData;
   const [conferentesList] = useState<Conferente[]>(() => loadConferentes().filter((c) => c.ativo));
+  const [MOTIVOS] = useState<string[]>(() => loadMotivos());
 
   const [status, setStatus] = useState<Status>(editData?.status || "Pendente");
   const [fornecedorId, setFornecedorId] = useState(editData?.fornecedorId || fornecedorPreSelecionadoId || "");

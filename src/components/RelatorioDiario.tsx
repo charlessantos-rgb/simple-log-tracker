@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Ocorrencia, Status, loadConfig, formatarMoeda, calcularValorTotal } from "@/lib/rnc-types";
+import { Ocorrencia, Status, loadConfig } from "@/lib/rnc-types";
 
 interface RelatorioDiarioProps {
   ocorrencias: Ocorrencia[];
@@ -26,9 +26,8 @@ function gerarHTML(ocorrenciasDoDia: Ocorrencia[], dataRef: string, todas: Ocorr
   ocorrenciasDoDia.forEach((o) => porStatus[o.status].push(o));
 
   const totalDia = ocorrenciasDoDia.length;
-  const valorTotalDia = ocorrenciasDoDia.reduce((acc, o) => acc + calcularValorTotal(o.materiais), 0);
+  const totalMateriais = ocorrenciasDoDia.reduce((acc, o) => acc + o.materiais.length, 0);
 
-  // Status geral (todas em aberto, não só do dia)
   const pendentesAbertas = todas.filter((o) => o.status === "Pendente" || o.status === "Em Andamento");
 
   const corStatus: Record<Status, string> = {
@@ -38,47 +37,81 @@ function gerarHTML(ocorrenciasDoDia: Ocorrencia[], dataRef: string, todas: Ocorr
     Cancelado: "#dc3545",
   };
 
+  const cardOcorrencia = (o: Ocorrencia, idx: number) => {
+    const horaCriacao = new Date(o.dataCriacao).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const corHeader = corStatus[o.status];
+
+    const linhasMateriais = o.materiais.length === 0
+      ? `<tr><td colspan="5" style="padding:10px;text-align:center;color:#999;font-size:11px;font-style:italic;">Nenhum material registrado</td></tr>`
+      : o.materiais.map((m, i) => `
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:6px 8px;font-size:11px;color:#666;width:24px;text-align:center;">${i + 1}</td>
+          <td style="padding:6px 8px;font-size:11px;font-family:monospace;color:#333;">${m.codigoAndra || "—"}</td>
+          <td style="padding:6px 8px;font-size:12px;color:#1a1a1a;font-weight:600;">${m.descricao || "—"}</td>
+          <td style="padding:6px 8px;font-size:11px;text-align:center;color:#333;">${m.quantidade || 0}</td>
+          <td style="padding:6px 8px;font-size:11px;color:#b8860b;font-weight:600;">${m.motivo || "—"}</td>
+        </tr>`).join("");
+
+    return `
+      <div style="margin-bottom:14px;border:1px solid #ddd;border-radius:6px;overflow:hidden;background:#fff;">
+        <div style="background:${corHeader};padding:8px 14px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="color:#fff;font-size:12px;font-weight:700;">
+            #${idx + 1} · ${o.protocolo}
+          </div>
+          <div style="color:#fff;font-size:11px;font-weight:600;background:rgba(0,0,0,0.18);padding:2px 8px;border-radius:10px;">
+            ${o.status}
+          </div>
+        </div>
+
+        <div style="padding:10px 14px;background:#fafafa;border-bottom:1px solid #eee;display:flex;flex-wrap:wrap;gap:14px;font-size:11px;">
+          <div><span style="color:#888;text-transform:uppercase;font-weight:700;font-size:10px;">Fornecedor:</span> <strong style="color:#1a1a1a;">${o.fornecedorNome || "—"}</strong></div>
+          <div><span style="color:#888;text-transform:uppercase;font-weight:700;font-size:10px;">NF:</span> <strong style="color:#1a1a1a;">${o.notaFiscal || "—"}${o.serie ? `/${o.serie}` : ""}</strong></div>
+          <div><span style="color:#888;text-transform:uppercase;font-weight:700;font-size:10px;">O.C.:</span> <strong style="color:#1a1a1a;">${o.ordemCompra || "—"}</strong></div>
+          <div><span style="color:#888;text-transform:uppercase;font-weight:700;font-size:10px;">Conferente:</span> <strong style="color:#1a1a1a;">${o.conferente || "—"}</strong></div>
+          <div><span style="color:#888;text-transform:uppercase;font-weight:700;font-size:10px;">Hora:</span> <strong style="color:#1a1a1a;">${horaCriacao}</strong></div>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f0f0f0;">
+              <th style="padding:6px 8px;text-align:center;font-size:10px;color:#666;text-transform:uppercase;font-weight:700;width:24px;">#</th>
+              <th style="padding:6px 8px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Cód. Andra</th>
+              <th style="padding:6px 8px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Material</th>
+              <th style="padding:6px 8px;text-align:center;font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Qtd</th>
+              <th style="padding:6px 8px;text-align:left;font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Motivo</th>
+            </tr>
+          </thead>
+          <tbody>${linhasMateriais}</tbody>
+        </table>
+
+        ${o.descricao ? `
+        <div style="padding:10px 14px;background:#fffdf5;border-top:1px solid #eee;font-size:11px;color:#555;line-height:1.5;">
+          <strong style="color:#888;text-transform:uppercase;font-size:10px;font-weight:700;">Descrição:</strong> ${o.descricao}
+        </div>` : ""}
+      </div>`;
+  };
+
   const blocoStatus = (status: Status) => {
     const lista = porStatus[status];
     if (lista.length === 0) return "";
-    const rows = lista.map((o, i) => `
-      <tr style="border-bottom:1px solid #eee;">
-        <td style="padding:6px 10px;font-size:12px;">${i + 1}</td>
-        <td style="padding:6px 10px;font-size:12px;font-family:monospace;">${o.protocolo}</td>
-        <td style="padding:6px 10px;font-size:12px;">${o.fornecedorNome || "—"}</td>
-        <td style="padding:6px 10px;font-size:12px;">${o.notaFiscal || "—"}</td>
-        <td style="padding:6px 10px;font-size:12px;text-align:center;">${o.materiais.length}</td>
-        <td style="padding:6px 10px;font-size:12px;">${o.conferente || "—"}</td>
-      </tr>`).join("");
     return `
-      <div style="margin-bottom:18px;">
-        <div style="background:${corStatus[status]};color:#fff;padding:6px 14px;font-size:13px;font-weight:700;border-radius:4px 4px 0 0;">
-          ${status} — ${lista.length} ${lista.length === 1 ? "ocorrência" : "ocorrências"}
+      <div style="margin-bottom:22px;">
+        <div style="background:${corStatus[status]};color:#fff;padding:8px 14px;font-size:13px;font-weight:700;border-radius:4px;margin-bottom:10px;display:flex;justify-content:space-between;">
+          <span>${status}</span>
+          <span style="font-weight:600;font-size:12px;">${lista.length} ${lista.length === 1 ? "ocorrência" : "ocorrências"}</span>
         </div>
-        <table style="width:100%;border-collapse:collapse;border:1px solid #ddd;border-top:none;">
-          <thead>
-            <tr style="background:#f5f5f5;border-bottom:1px solid #ddd;">
-              <th style="padding:6px 10px;text-align:left;font-size:11px;">Nº</th>
-              <th style="padding:6px 10px;text-align:left;font-size:11px;">Protocolo</th>
-              <th style="padding:6px 10px;text-align:left;font-size:11px;">Fornecedor</th>
-              <th style="padding:6px 10px;text-align:left;font-size:11px;">NF</th>
-              <th style="padding:6px 10px;text-align:center;font-size:11px;">Itens</th>
-              <th style="padding:6px 10px;text-align:left;font-size:11px;">Conferente</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+        ${lista.map((o, i) => cardOcorrencia(o, i)).join("")}
       </div>`;
   };
 
   const blocoVazio = totalDia === 0
-    ? `<div style="padding:25px;text-align:center;color:#666;font-size:13px;border:1px dashed #ccc;border-radius:4px;background:#fafafa;">
+    ? `<div style="padding:30px;text-align:center;color:#666;font-size:13px;border:1px dashed #ccc;border-radius:6px;background:#fafafa;">
          Nenhuma ocorrência registrada nesta data.
        </div>`
     : "";
 
   const blocoAbertasResumo = pendentesAbertas.length > 0
-    ? `<div style="margin-top:15px;padding:12px 15px;background:#fff8e1;border-left:4px solid #D4A017;font-size:12px;">
+    ? `<div style="margin-top:18px;padding:12px 15px;background:#fff8e1;border-left:4px solid #D4A017;font-size:12px;border-radius:4px;">
          <strong>⚠ Atenção:</strong> Há atualmente <strong>${pendentesAbertas.length}</strong> 
          ${pendentesAbertas.length === 1 ? "ocorrência em aberto" : "ocorrências em aberto"} no sistema 
          (somando Pendentes e Em Andamento de todas as datas).
@@ -87,7 +120,7 @@ function gerarHTML(ocorrenciasDoDia: Ocorrencia[], dataRef: string, todas: Ocorr
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>Relatório Diário RNC — ${dataRef}</title></head>
 <body style="margin:0;padding:20px;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;">
-<div style="max-width:900px;margin:0 auto;background:#fff;border:2px solid #1a1a1a;border-radius:6px;overflow:hidden;">
+<div style="max-width:920px;margin:0 auto;background:#fff;border:2px solid #1a1a1a;border-radius:6px;overflow:hidden;">
 
   <div style="background:#1a1a1a;padding:18px 25px;display:flex;align-items:center;gap:15px;">
     <img src="${window.location.origin}/logo-50anos.png" style="height:60px;" alt="Andra 50 Anos" />
@@ -97,32 +130,32 @@ function gerarHTML(ocorrenciasDoDia: Ocorrencia[], dataRef: string, todas: Ocorr
     </div>
   </div>
 
-  <div style="padding:20px 25px;">
-    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:140px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#fafafa;">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;font-weight:700;">Total no dia</div>
-        <div style="font-size:22px;font-weight:800;color:#1a1a1a;margin-top:4px;">${totalDia}</div>
+  <div style="padding:22px 25px;">
+    <div style="display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#fafafa;">
+        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Total no dia</div>
+        <div style="font-size:24px;font-weight:800;color:#1a1a1a;margin-top:4px;">${totalDia}</div>
       </div>
-      <div style="flex:1;min-width:140px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#fff8e1;">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;font-weight:700;">Pendentes</div>
-        <div style="font-size:22px;font-weight:800;color:#D4A017;margin-top:4px;">${porStatus.Pendente.length}</div>
+      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#f5f5f5;">
+        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Materiais</div>
+        <div style="font-size:24px;font-weight:800;color:#1a1a1a;margin-top:4px;">${totalMateriais}</div>
       </div>
-      <div style="flex:1;min-width:140px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#e3f2fd;">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;font-weight:700;">Em Andamento</div>
-        <div style="font-size:22px;font-weight:800;color:#007bff;margin-top:4px;">${porStatus["Em Andamento"].length}</div>
+      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#fff8e1;">
+        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Pendentes</div>
+        <div style="font-size:24px;font-weight:800;color:#D4A017;margin-top:4px;">${porStatus.Pendente.length}</div>
       </div>
-      <div style="flex:1;min-width:140px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#e8f5e9;">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;font-weight:700;">Resolvidas</div>
-        <div style="font-size:22px;font-weight:800;color:#28a745;margin-top:4px;">${porStatus.Resolvido.length}</div>
+      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#e3f2fd;">
+        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Em Andamento</div>
+        <div style="font-size:24px;font-weight:800;color:#007bff;margin-top:4px;">${porStatus["Em Andamento"].length}</div>
       </div>
-      <div style="flex:1;min-width:140px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#ffebee;">
-        <div style="font-size:11px;color:#666;text-transform:uppercase;font-weight:700;">Canceladas</div>
-        <div style="font-size:22px;font-weight:800;color:#dc3545;margin-top:4px;">${porStatus.Cancelado.length}</div>
+      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#e8f5e9;">
+        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Resolvidas</div>
+        <div style="font-size:24px;font-weight:800;color:#28a745;margin-top:4px;">${porStatus.Resolvido.length}</div>
       </div>
-    </div>
-
-    <div style="padding:10px 15px;background:#1a1a1a;color:#D4A017;font-size:12px;font-weight:700;border-radius:4px;margin-bottom:15px;">
-      Valor total impactado no dia: ${formatarMoeda(valorTotalDia)} <span style="color:#999;font-weight:400;font-size:11px;margin-left:8px;">(controle interno)</span>
+      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#ffebee;">
+        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Canceladas</div>
+        <div style="font-size:24px;font-weight:800;color:#dc3545;margin-top:4px;">${porStatus.Cancelado.length}</div>
+      </div>
     </div>
 
     ${blocoVazio}
@@ -132,7 +165,7 @@ function gerarHTML(ocorrenciasDoDia: Ocorrencia[], dataRef: string, todas: Ocorr
     ${blocoStatus("Cancelado")}
     ${blocoAbertasResumo}
 
-    <div style="border-top:1px solid #ddd;padding-top:15px;margin-top:20px;font-size:11px;color:#666;line-height:1.6;">
+    <div style="border-top:1px solid #ddd;padding-top:15px;margin-top:25px;font-size:11px;color:#666;line-height:1.6;">
       <p style="margin:0;">Atenciosamente,</p>
       <p style="margin:8px 0 0;"><strong>${cfg.remetenteNome}</strong><br/>
       ${cfg.remetenteCargo}<br/>

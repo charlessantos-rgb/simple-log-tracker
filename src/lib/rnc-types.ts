@@ -135,6 +135,31 @@ export function loadUsuarios(): Usuario[] {
 }
 export function saveUsuarios(d: Usuario[]) { save("rnc_usuarios", d); }
 
+// ============== Motivos de não conformidade (editáveis) ==============
+export const DEFAULT_MOTIVOS: string[] = [
+  "Quantidade divergente",
+  "Material danificado",
+  "Material incorreto",
+  "Falta de material",
+  "Validade vencida",
+  "Embalagem violada",
+  "Especificação técnica divergente",
+  "Produto fora do padrão de qualidade",
+  "Identificação/etiqueta incorreta",
+  "Lote não corresponde ao pedido",
+  "Outros",
+];
+
+export function loadMotivos(): string[] {
+  const list = load<string[]>("rnc_motivos", []);
+  if (!list || list.length === 0) {
+    save("rnc_motivos", DEFAULT_MOTIVOS);
+    return [...DEFAULT_MOTIVOS];
+  }
+  return list;
+}
+export function saveMotivos(d: string[]) { save("rnc_motivos", d); }
+
 const DEFAULT_CONFIG: AppConfig = {
   remetenteNome: "Charles S Silva",
   remetenteCargo: "Encarregado de Logística",

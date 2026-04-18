@@ -13,11 +13,13 @@ import {
   loadConferentes,
   loadUsuarios,
   loadConfig,
+  loadMotivos,
   saveOcorrencias,
   saveFornecedores,
   saveConferentes,
   saveUsuarios,
   saveConfig,
+  saveMotivos,
 } from "./rnc-types";
 
 /**
@@ -31,6 +33,7 @@ export function exportarParaExcel() {
   const conferentes = loadConferentes();
   const usuarios = loadUsuarios();
   const config = loadConfig();
+  const motivos = loadMotivos();
 
   const ocorrenciasRows = ocorrencias.map((o) => ({
     ID: o.id,
@@ -110,12 +113,15 @@ export function exportarParaExcel() {
     { Chave: "ccRelatorio", Valor: (config.ccRelatorio || []).join(";") },
   ];
 
+  const motivosRows = motivos.map((m, i) => ({ Ordem: i + 1, Motivo: m }));
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ocorrenciasRows), "Ocorrencias");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(materiaisRows), "Materiais");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fornecedoresRows), "Fornecedores");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(conferentesRows), "Conferentes");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(usuariosRows), "Usuarios");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(motivosRows), "Motivos");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(configRows), "Config");
 
   const dataStr = new Date().toISOString().slice(0, 10);
@@ -157,6 +163,7 @@ export async function importarDeExcel(file: File): Promise<{
   const conferentesSheet = wb.Sheets["Conferentes"];
   const usuariosSheet = wb.Sheets["Usuarios"];
   const configSheet = wb.Sheets["Config"];
+  const motivosSheet = wb.Sheets["Motivos"];
 
   if (!ocorrenciasSheet || !fornecedoresSheet) {
     throw new Error(
@@ -170,6 +177,7 @@ export async function importarDeExcel(file: File): Promise<{
   const conferentesData = conferentesSheet ? XLSX.utils.sheet_to_json<any>(conferentesSheet) : [];
   const usuariosData = usuariosSheet ? XLSX.utils.sheet_to_json<any>(usuariosSheet) : [];
   const configData = configSheet ? XLSX.utils.sheet_to_json<any>(configSheet) : [];
+  const motivosData = motivosSheet ? XLSX.utils.sheet_to_json<any>(motivosSheet) : [];
 
   const materiaisPorOcorrencia = new Map<string, MaterialNaoConforme[]>();
   for (const m of materiaisData) {
@@ -270,6 +278,12 @@ export async function importarDeExcel(file: File): Promise<{
     saveConfig(cfg);
   }
 
+  if (motivosData.length > 0) {
+    const lista = motivosData
+      .map((r) => String(r["Motivo"] || "").trim())
+      .filter(Boolean);
+    if (lista.length > 0) saveMotivos(lista);
+  }
   return {
     ocorrencias: ocorrencias.length,
     fornecedores: fornecedores.length,

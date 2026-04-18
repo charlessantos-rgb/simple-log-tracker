@@ -12,12 +12,16 @@ import {
   saveUsuarios,
   loadConfig,
   saveConfig,
+  loadMotivos,
+  saveMotivos,
+  DEFAULT_MOTIVOS,
   hashPassword,
 } from "@/lib/rnc-types";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmailListEditor } from "@/components/EmailListEditor";
+import { MotivosEditor } from "@/components/MotivosEditor";
 
-type Tab = "conferentes" | "usuarios" | "config";
+type Tab = "conferentes" | "usuarios" | "motivos" | "config";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -27,6 +31,7 @@ export default function Admin() {
   const [conferentes, setConferentes] = useState<Conferente[]>(loadConferentes());
   const [usuarios, setUsuarios] = useState<Usuario[]>(loadUsuarios());
   const [config, setConfig] = useState<AppConfig>(loadConfig());
+  const [motivos, setMotivos] = useState<string[]>(loadMotivos());
 
   // Conferente form
   const [novoConfNome, setNovoConfNome] = useState("");
@@ -181,6 +186,7 @@ export default function Admin() {
           {([
             { id: "conferentes", label: "Conferentes" },
             { id: "usuarios", label: "Usuários" },
+            { id: "motivos", label: "Motivos" },
             { id: "config", label: "Configurações" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
@@ -348,7 +354,48 @@ export default function Admin() {
           </div>
         )}
 
-        {/* Configurações */}
+        {/* Motivos de não conformidade */}
+        {tab === "motivos" && (
+          <div className="space-y-4">
+            <div className="rounded-lg border bg-card p-5 space-y-4">
+              <div className="flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Motivos de Não Conformidade</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Cadastre, edite, reordene ou remova os motivos disponíveis no formulário de RNC.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!confirm("Restaurar a lista padrão de motivos? Os motivos atuais serão substituídos.")) return;
+                      setMotivos([...DEFAULT_MOTIVOS]);
+                      saveMotivos([...DEFAULT_MOTIVOS]);
+                      toast.success("Lista padrão restaurada");
+                    }}
+                    className="text-xs border border-input bg-background hover:bg-muted px-3 py-2 rounded font-semibold transition-colors"
+                  >
+                    Restaurar padrão
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { saveMotivos(motivos); toast.success("Motivos salvos"); }}
+                    className="text-xs bg-primary text-primary-foreground hover:opacity-90 px-4 py-2 rounded font-bold transition-opacity"
+                  >
+                    Salvar alterações
+                  </button>
+                </div>
+              </div>
+
+              <MotivosEditor
+                motivos={motivos}
+                onChange={(list) => { setMotivos(list); saveMotivos(list); }}
+              />
+            </div>
+          </div>
+        )}
+
         {tab === "config" && (
           <form onSubmit={salvarConfig} className="rounded-lg border bg-card p-5 space-y-4 max-w-2xl">
             <h3 className="text-sm font-bold text-foreground">Identificação do Remetente (assinatura dos e-mails/relatórios)</h3>
