@@ -175,12 +175,14 @@ export function RelatorioEmail({ ocorrencia, fornecedor, onClose }: RelatorioEma
 
     // 2) Abre o Gmail compose
     const destinatario = fornecedor?.email || cfg.destinatarioPadrao || "";
+    const ccList = (cfg.ccNovaRNC || []).filter((e) => e && e.trim()).join(",");
     const assunto = `Não Conformidade ${ocorrencia.protocolo} — ${ocorrencia.fornecedorNome}`;
     const corpoFallback = copiouRich
       ? "Cole aqui (Ctrl+V) — o conteúdo visual completo do relatório foi copiado para a área de transferência."
       : `Relatório de Não Conformidade ${ocorrencia.protocolo}.\n\nFornecedor: ${ocorrencia.fornecedorNome}\nNF: ${ocorrencia.notaFiscal}\nStatus: ${ocorrencia.status}\nConferente: ${ocorrencia.conferente}`;
 
-    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(destinatario)}&su=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpoFallback)}`;
+    const ccParam = ccList ? `&cc=${encodeURIComponent(ccList)}` : "";
+    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(destinatario)}${ccParam}&su=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpoFallback)}`;
     window.open(url, "_blank");
 
     if (copiouRich) {
