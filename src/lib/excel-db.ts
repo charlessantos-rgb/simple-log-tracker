@@ -278,6 +278,12 @@ export async function importarDeExcel(file: File): Promise<{
     saveConfig(cfg);
   }
 
+  if (motivosData.length > 0) {
+    const lista = motivosData
+      .map((r) => String(r["Motivo"] || "").trim())
+      .filter(Boolean);
+    if (lista.length > 0) saveMotivos(lista);
+  }
   return {
     ocorrencias: ocorrencias.length,
     fornecedores: fornecedores.length,
