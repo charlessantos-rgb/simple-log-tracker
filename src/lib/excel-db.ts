@@ -163,6 +163,7 @@ export async function importarDeExcel(file: File): Promise<{
   const conferentesSheet = wb.Sheets["Conferentes"];
   const usuariosSheet = wb.Sheets["Usuarios"];
   const configSheet = wb.Sheets["Config"];
+  const motivosSheet = wb.Sheets["Motivos"];
 
   if (!ocorrenciasSheet || !fornecedoresSheet) {
     throw new Error(
@@ -176,6 +177,7 @@ export async function importarDeExcel(file: File): Promise<{
   const conferentesData = conferentesSheet ? XLSX.utils.sheet_to_json<any>(conferentesSheet) : [];
   const usuariosData = usuariosSheet ? XLSX.utils.sheet_to_json<any>(usuariosSheet) : [];
   const configData = configSheet ? XLSX.utils.sheet_to_json<any>(configSheet) : [];
+  const motivosData = motivosSheet ? XLSX.utils.sheet_to_json<any>(motivosSheet) : [];
 
   const materiaisPorOcorrencia = new Map<string, MaterialNaoConforme[]>();
   for (const m of materiaisData) {
