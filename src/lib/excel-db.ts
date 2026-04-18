@@ -13,11 +13,13 @@ import {
   loadConferentes,
   loadUsuarios,
   loadConfig,
+  loadMotivos,
   saveOcorrencias,
   saveFornecedores,
   saveConferentes,
   saveUsuarios,
   saveConfig,
+  saveMotivos,
 } from "./rnc-types";
 
 /**
@@ -31,6 +33,7 @@ export function exportarParaExcel() {
   const conferentes = loadConferentes();
   const usuarios = loadUsuarios();
   const config = loadConfig();
+  const motivos = loadMotivos();
 
   const ocorrenciasRows = ocorrencias.map((o) => ({
     ID: o.id,
@@ -110,12 +113,15 @@ export function exportarParaExcel() {
     { Chave: "ccRelatorio", Valor: (config.ccRelatorio || []).join(";") },
   ];
 
+  const motivosRows = motivos.map((m, i) => ({ Ordem: i + 1, Motivo: m }));
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ocorrenciasRows), "Ocorrencias");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(materiaisRows), "Materiais");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fornecedoresRows), "Fornecedores");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(conferentesRows), "Conferentes");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(usuariosRows), "Usuarios");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(motivosRows), "Motivos");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(configRows), "Config");
 
   const dataStr = new Date().toISOString().slice(0, 10);
