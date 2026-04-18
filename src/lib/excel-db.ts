@@ -106,6 +106,8 @@ export function exportarParaExcel() {
     { Chave: "remetenteEmpresa", Valor: config.remetenteEmpresa },
     { Chave: "remetenteSite", Valor: config.remetenteSite },
     { Chave: "destinatarioPadrao", Valor: config.destinatarioPadrao || "" },
+    { Chave: "ccNovaRNC", Valor: (config.ccNovaRNC || []).join(";") },
+    { Chave: "ccRelatorio", Valor: (config.ccRelatorio || []).join(";") },
   ];
 
   const wb = XLSX.utils.book_new();
@@ -253,11 +255,17 @@ export async function importarDeExcel(file: File): Promise<{
       remetenteEmpresa: "",
       remetenteSite: "",
       destinatarioPadrao: "",
+      ccNovaRNC: [],
+      ccRelatorio: [],
     };
     for (const r of configData) {
       const k = String(r["Chave"] || "");
       const v = String(r["Valor"] || "");
-      if (k in cfg) (cfg as any)[k] = v;
+      if (k === "ccNovaRNC" || k === "ccRelatorio") {
+        (cfg as any)[k] = v ? v.split(";").map((s) => s.trim()).filter(Boolean) : [];
+      } else if (k in cfg) {
+        (cfg as any)[k] = v;
+      }
     }
     saveConfig(cfg);
   }

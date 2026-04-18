@@ -18,6 +18,7 @@ import { FormOcorrencia } from "@/components/FormOcorrencia";
 import { CadastroFornecedor } from "@/components/CadastroFornecedor";
 import { RelatorioEmail } from "@/components/RelatorioEmail";
 import { DashboardRelatorios } from "@/components/DashboardRelatorios";
+import { RelatorioDiario } from "@/components/RelatorioDiario";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const Index = () => {
   const [showEditRNC, setShowEditRNC] = useState(false);
   const [enviarOcorrencia, setEnviarOcorrencia] = useState<Ocorrencia | null>(null);
   const [showRelatorio, setShowRelatorio] = useState(false);
+  const [showRelatorioDiario, setShowRelatorioDiario] = useState(false);
   const [fornecedorPreSelecionadoId, setFornecedorPreSelecionadoId] = useState<string | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -135,6 +137,13 @@ const Index = () => {
               className="inline-flex items-center gap-1.5 hover:bg-primary-foreground/10 border border-primary-foreground/15 rounded-md px-3 py-2 text-xs font-semibold text-primary-foreground transition-colors"
             >
               Relatórios
+            </button>
+            <button
+              onClick={() => setShowRelatorioDiario(true)}
+              title="Relatório do dia para envio por e-mail"
+              className="inline-flex items-center gap-1.5 hover:bg-primary-foreground/10 border border-primary-foreground/15 rounded-md px-3 py-2 text-xs font-semibold text-primary-foreground transition-colors"
+            >
+              Relatório do Dia
             </button>
             <button
               onClick={exportarParaExcel}
