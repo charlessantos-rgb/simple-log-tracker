@@ -12,12 +12,16 @@ import {
   saveUsuarios,
   loadConfig,
   saveConfig,
+  loadMotivos,
+  saveMotivos,
+  DEFAULT_MOTIVOS,
   hashPassword,
 } from "@/lib/rnc-types";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmailListEditor } from "@/components/EmailListEditor";
+import { MotivosEditor } from "@/components/MotivosEditor";
 
-type Tab = "conferentes" | "usuarios" | "config";
+type Tab = "conferentes" | "usuarios" | "motivos" | "config";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -27,6 +31,7 @@ export default function Admin() {
   const [conferentes, setConferentes] = useState<Conferente[]>(loadConferentes());
   const [usuarios, setUsuarios] = useState<Usuario[]>(loadUsuarios());
   const [config, setConfig] = useState<AppConfig>(loadConfig());
+  const [motivos, setMotivos] = useState<string[]>(loadMotivos());
 
   // Conferente form
   const [novoConfNome, setNovoConfNome] = useState("");
