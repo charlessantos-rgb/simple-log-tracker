@@ -15,6 +15,7 @@ import {
   hashPassword,
 } from "@/lib/rnc-types";
 import { useAuth } from "@/contexts/AuthContext";
+import { EmailListEditor } from "@/components/EmailListEditor";
 
 type Tab = "conferentes" | "usuarios" | "config";
 
@@ -378,6 +379,29 @@ export default function Admin() {
                   className="w-full border border-input bg-background px-3 py-2 text-sm rounded" />
               </div>
             </div>
+
+            <div className="border-t pt-4 space-y-4">
+              <h3 className="text-sm font-bold text-foreground">Contatos com Cópia (CC)</h3>
+
+              <div className="rounded-md border bg-muted/20 p-3">
+                <EmailListEditor
+                  label="Destinatários em CC para Novas RNCs"
+                  description="Esses e-mails serão automaticamente incluídos em cópia ao enviar uma nova RNC ao fornecedor."
+                  emails={config.ccNovaRNC || []}
+                  onChange={(list) => setConfig({ ...config, ccNovaRNC: list })}
+                />
+              </div>
+
+              <div className="rounded-md border bg-muted/20 p-3">
+                <EmailListEditor
+                  label="Destinatários do Relatório Diário"
+                  description="E-mails que receberão o resumo diário das ocorrências. O primeiro será o destinatário principal; os demais entram em cópia."
+                  emails={config.ccRelatorio || []}
+                  onChange={(list) => setConfig({ ...config, ccRelatorio: list })}
+                />
+              </div>
+            </div>
+
             <div>
               <button type="submit"
                 className="bg-primary px-6 py-2 text-sm font-bold text-primary-foreground rounded hover:opacity-90 transition-opacity">
