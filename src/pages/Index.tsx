@@ -281,6 +281,13 @@ const Index = () => {
           onClose={() => setShowRelatorio(false)}
         />
       )}
+
+      {showRelatorioDiario && (
+        <RelatorioDiario
+          ocorrencias={ocorrencias}
+          onClose={() => setShowRelatorioDiario(false)}
+        />
+      )}
     </div>
   );
 };
