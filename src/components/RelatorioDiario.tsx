@@ -131,32 +131,6 @@ function gerarHTML(ocorrenciasDoDia: Ocorrencia[], dataRef: string, todas: Ocorr
   </div>
 
   <div style="padding:22px 25px;">
-    <div style="display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#fafafa;">
-        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Total no dia</div>
-        <div style="font-size:24px;font-weight:800;color:#1a1a1a;margin-top:4px;">${totalDia}</div>
-      </div>
-      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#f5f5f5;">
-        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Materiais</div>
-        <div style="font-size:24px;font-weight:800;color:#1a1a1a;margin-top:4px;">${totalMateriais}</div>
-      </div>
-      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#fff8e1;">
-        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Pendentes</div>
-        <div style="font-size:24px;font-weight:800;color:#D4A017;margin-top:4px;">${porStatus.Pendente.length}</div>
-      </div>
-      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#e3f2fd;">
-        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Em Andamento</div>
-        <div style="font-size:24px;font-weight:800;color:#007bff;margin-top:4px;">${porStatus["Em Andamento"].length}</div>
-      </div>
-      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#e8f5e9;">
-        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Resolvidas</div>
-        <div style="font-size:24px;font-weight:800;color:#28a745;margin-top:4px;">${porStatus.Resolvido.length}</div>
-      </div>
-      <div style="flex:1;min-width:130px;padding:12px;border:1px solid #ddd;border-radius:4px;background:#ffebee;">
-        <div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Canceladas</div>
-        <div style="font-size:24px;font-weight:800;color:#dc3545;margin-top:4px;">${porStatus.Cancelado.length}</div>
-      </div>
-    </div>
 
     ${blocoVazio}
     ${blocoStatus("Pendente")}
