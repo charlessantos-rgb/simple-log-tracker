@@ -451,6 +451,37 @@ export default function Admin() {
               </div>
             </div>
 
+            <div className="border-t pt-4 space-y-3">
+              <h3 className="text-sm font-bold text-foreground">Tema do Sistema</h3>
+              <p className="text-xs text-muted-foreground">Escolha a aparência visual da interface.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {([
+                  { id: "claro", label: "Claro", desc: "Fundo claro, ideal para o dia a dia", preview: "bg-white border-gray-300 text-gray-900" },
+                  { id: "escuro", label: "Escuro / Preto", desc: "Reduz o cansaço visual", preview: "bg-black border-gray-700 text-white" },
+                  { id: "dourado", label: "Dourado Andra", desc: "Tons da identidade da marca", preview: "bg-amber-50 border-amber-400 text-amber-900" },
+                ] as const).map((t) => {
+                  const ativo = (config.tema || "claro") === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => { setConfig({ ...config, tema: t.id }); applyTheme(t.id); }}
+                      className={`text-left rounded-md border-2 p-3 transition-all ${ativo ? "border-accent ring-2 ring-accent/30" : "border-input hover:border-foreground/30"}`}
+                    >
+                      <div className={`h-12 rounded mb-2 border ${t.preview} flex items-center justify-center text-xs font-bold`}>
+                        Aa
+                      </div>
+                      <div className="text-sm font-bold text-foreground flex items-center gap-2">
+                        {t.label}
+                        {ativo && <span className="text-[10px] bg-accent text-accent-foreground px-1.5 py-0.5 rounded">Ativo</span>}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">{t.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div>
               <button type="submit"
                 className="bg-primary px-6 py-2 text-sm font-bold text-primary-foreground rounded hover:opacity-90 transition-opacity">
