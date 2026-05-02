@@ -109,8 +109,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-primary px-6 py-0 shadow-lg sticky top-0 z-30">
-        <div className="mx-auto max-w-7xl flex items-center justify-between h-16 gap-3 flex-wrap">
+      <header className="bg-primary px-6 py-3 shadow-lg sticky top-0 z-30">
+        <div className="mx-auto max-w-7xl flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
             <img src="/logo-50anos.png" alt="Andra 50 Anos" className="h-12" />
             <div className="h-6 w-px bg-primary-foreground/20" />
