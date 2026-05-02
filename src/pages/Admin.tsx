@@ -16,6 +16,7 @@ import {
   saveMotivos,
   DEFAULT_MOTIVOS,
   hashPassword,
+  applyTheme,
 } from "@/lib/rnc-types";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmailListEditor } from "@/components/EmailListEditor";
@@ -144,6 +145,7 @@ export default function Admin() {
   function salvarConfig(e: React.FormEvent) {
     e.preventDefault();
     saveConfig(config);
+    applyTheme(config.tema || "claro");
     toast.success("Configurações salvas");
   }
 
