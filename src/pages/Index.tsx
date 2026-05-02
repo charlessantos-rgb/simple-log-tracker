@@ -243,7 +243,8 @@ const Index = () => {
         <DashboardFinanceiro ocorrencias={ocorrencias} />
 
         <TabelaOcorrencias
-          ocorrencias={ocorrencias}
+          ocorrencias={ocorrenciasAtivas}
+          titulo="Ocorrências Ativas"
           onEdit={handleEdit}
           onDelete={handleDelete}
           onResolve={handleResolve}
