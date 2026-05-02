@@ -70,6 +70,15 @@ export interface AppConfig {
   ccNovaRNC?: string[];
   /** E-mails destinatários do Relatório Diário de ocorrências */
   ccRelatorio?: string[];
+  /** Tema visual do sistema */
+  tema?: "claro" | "escuro" | "dourado";
+}
+
+export function applyTheme(tema: "claro" | "escuro" | "dourado" = "claro") {
+  const root = document.documentElement;
+  root.classList.remove("dark", "theme-gold");
+  if (tema === "escuro") root.classList.add("dark");
+  if (tema === "dourado") root.classList.add("theme-gold");
 }
 
 export const STATUS_OPTIONS: Status[] = ["Pendente", "Em Andamento", "Resolvido", "Cancelado"];
@@ -168,6 +177,7 @@ const DEFAULT_CONFIG: AppConfig = {
   destinatarioPadrao: "",
   ccNovaRNC: [],
   ccRelatorio: [],
+  tema: "claro",
 };
 export function loadConfig(): AppConfig { return { ...DEFAULT_CONFIG, ...load<Partial<AppConfig>>("rnc_config", {}) }; }
 export function saveConfig(c: AppConfig) { save("rnc_config", c); }
