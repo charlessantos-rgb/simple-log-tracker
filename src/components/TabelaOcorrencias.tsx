@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Ocorrencia, statusClasses } from "@/lib/rnc-types";
 
 interface TabelaOcorrenciasProps {
@@ -7,11 +7,24 @@ interface TabelaOcorrenciasProps {
   onDelete: (id: string) => void;
   onResolve: (id: string) => void;
   onEnviar: (o: Ocorrencia) => void;
+  titulo?: string;
+  modoArquivo?: boolean;
+  itensPorPagina?: number;
 }
 
-export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve, onEnviar }: TabelaOcorrenciasProps) {
+export function TabelaOcorrencias({
+  ocorrencias,
+  onEdit,
+  onDelete,
+  onResolve,
+  onEnviar,
+  titulo = "Ocorrências Ativas",
+  modoArquivo = false,
+  itensPorPagina = 10,
+}: TabelaOcorrenciasProps) {
   const [busca, setBusca] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pagina, setPagina] = useState(1);
 
   const filtradas = useMemo(() => {
     if (!busca.trim()) return ocorrencias;
@@ -25,6 +38,13 @@ export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve, on
     );
   }, [ocorrencias, busca]);
 
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / itensPorPagina));
+  useEffect(() => { if (pagina > totalPaginas) setPagina(1); }, [totalPaginas, pagina]);
+  useEffect(() => { setPagina(1); }, [busca]);
+
+  const inicio = (pagina - 1) * itensPorPagina;
+  const paginadas = filtradas.slice(inicio, inicio + itensPorPagina);
+
   return (
     <div className="rounded-lg border bg-card shadow-sm">
       {/* Header */}
@@ -33,7 +53,7 @@ export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve, on
           <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          <h3 className="text-sm font-bold text-foreground">Ocorrências Registradas</h3>
+          <h3 className="text-sm font-bold text-foreground">{titulo}</h3>
           <span className="ml-1 bg-muted text-muted-foreground text-xs font-semibold px-2 py-0.5 rounded-full">
             {ocorrencias.length}
           </span>
@@ -80,7 +100,7 @@ export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve, on
                 </td>
               </tr>
             ) : (
-              filtradas.map((o) => (
+              paginadas.map((o) => (
                 <tr
                   key={o.id}
                   className={`cursor-pointer transition-colors ${
@@ -136,20 +156,48 @@ export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve, on
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/10">
+      <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/10 gap-3 flex-wrap">
         <p className="text-xs text-muted-foreground">
-          {filtradas.length} de {ocorrencias.length} ocorrências
+          Mostrando <span className="font-semibold text-foreground">{filtradas.length === 0 ? 0 : inicio + 1}–{Math.min(inicio + itensPorPagina, filtradas.length)}</span> de <span className="font-semibold text-foreground">{filtradas.length}</span>
+          {filtradas.length !== ocorrencias.length && <span className="text-muted-foreground"> (filtradas de {ocorrencias.length})</span>}
         </p>
-        <button
-          onClick={() => { if (selectedId) onResolve(selectedId); }}
-          disabled={!selectedId}
-          className="inline-flex items-center gap-1.5 bg-status-resolvido rounded-md px-4 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-30"
-        >
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-          Marcar como Resolvido
-        </button>
+
+        <div className="flex items-center gap-2">
+          {totalPaginas > 1 && (
+            <div className="inline-flex items-center gap-1">
+              <button
+                onClick={() => setPagina((p) => Math.max(1, p - 1))}
+                disabled={pagina === 1}
+                className="px-2 py-1 rounded border text-xs font-semibold hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ‹ Anterior
+              </button>
+              <span className="text-xs font-semibold text-muted-foreground px-2">
+                Página {pagina} de {totalPaginas}
+              </span>
+              <button
+                onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+                disabled={pagina === totalPaginas}
+                className="px-2 py-1 rounded border text-xs font-semibold hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                Próxima ›
+              </button>
+            </div>
+          )}
+
+          {!modoArquivo && (
+            <button
+              onClick={() => { if (selectedId) onResolve(selectedId); }}
+              disabled={!selectedId}
+              className="inline-flex items-center gap-1.5 bg-status-resolvido rounded-md px-4 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-30"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Marcar como Resolvido
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
