@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Ocorrencia, statusClasses } from "@/lib/rnc-types";
 
 interface TabelaOcorrenciasProps {
@@ -7,11 +7,24 @@ interface TabelaOcorrenciasProps {
   onDelete: (id: string) => void;
   onResolve: (id: string) => void;
   onEnviar: (o: Ocorrencia) => void;
+  titulo?: string;
+  modoArquivo?: boolean;
+  itensPorPagina?: number;
 }
 
-export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve, onEnviar }: TabelaOcorrenciasProps) {
+export function TabelaOcorrencias({
+  ocorrencias,
+  onEdit,
+  onDelete,
+  onResolve,
+  onEnviar,
+  titulo = "Ocorrências Ativas",
+  modoArquivo = false,
+  itensPorPagina = 10,
+}: TabelaOcorrenciasProps) {
   const [busca, setBusca] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pagina, setPagina] = useState(1);
 
   const filtradas = useMemo(() => {
     if (!busca.trim()) return ocorrencias;
@@ -24,6 +37,13 @@ export function TabelaOcorrencias({ ocorrencias, onEdit, onDelete, onResolve, on
         o.status.toLowerCase().includes(q)
     );
   }, [ocorrencias, busca]);
+
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / itensPorPagina));
+  useEffect(() => { if (pagina > totalPaginas) setPagina(1); }, [totalPaginas, pagina]);
+  useEffect(() => { setPagina(1); }, [busca]);
+
+  const inicio = (pagina - 1) * itensPorPagina;
+  const paginadas = filtradas.slice(inicio, inicio + itensPorPagina);
 
   return (
     <div className="rounded-lg border bg-card shadow-sm">
