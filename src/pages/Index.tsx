@@ -123,9 +123,9 @@ const Index = () => {
           <nav className="flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setShowNovaRNC(true)}
-              className="inline-flex items-center gap-1.5 bg-accent/20 hover:bg-accent/30 border border-accent/30 rounded-md px-3 py-2 text-xs font-semibold text-accent transition-colors"
+              className="inline-flex items-center gap-1.5 hover:bg-primary-foreground/10 border border-primary-foreground/15 rounded-md px-3 py-2 text-xs font-semibold text-primary-foreground transition-colors"
             >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               Nova RNC
