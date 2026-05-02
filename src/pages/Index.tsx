@@ -33,7 +33,11 @@ const Index = () => {
   const [enviarOcorrencia, setEnviarOcorrencia] = useState<Ocorrencia | null>(null);
   const [showRelatorio, setShowRelatorio] = useState(false);
   const [showRelatorioDiario, setShowRelatorioDiario] = useState(false);
+  const [showArquivo, setShowArquivo] = useState(false);
   const [fornecedorPreSelecionadoId, setFornecedorPreSelecionadoId] = useState<string | undefined>(undefined);
+
+  const ocorrenciasAtivas = ocorrencias.filter((o) => o.status !== "Resolvido");
+  const ocorrenciasArquivadas = ocorrencias.filter((o) => o.status === "Resolvido");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { saveOcorrencias(ocorrencias); }, [ocorrencias]);
