@@ -8,10 +8,6 @@ interface RelatorioEmailProps {
   onSent?: (ocorrenciaId: string) => void;
 }
 
-export function RelatorioEmail({ ocorrencia, fornecedor, onClose, onSent }: RelatorioEmailProps) {
-  const html = gerarHTMLRelatorio(ocorrencia, fornecedor);
-  const cfg = loadConfig();
-
 function gerarHTMLRelatorio(o: Ocorrencia, f?: Fornecedor): string {
   const cfg = loadConfig();
   const dataFormatada = new Date(o.dataCriacao).toLocaleDateString("pt-BR");
