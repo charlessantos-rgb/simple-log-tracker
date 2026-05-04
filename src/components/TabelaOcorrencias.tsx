@@ -121,12 +121,21 @@ export function TabelaOcorrencias({
                     <div className="inline-flex items-center gap-0.5">
                       <button
                         onClick={(e) => { e.stopPropagation(); onEnviar(o); }}
-                        title="Enviar por e-mail"
-                        className="p-1.5 rounded hover:bg-status-andamento/10 text-status-andamento transition-colors"
+                        title={o.emailEnviado
+                          ? `E-mail enviado${o.emailEnviadoEm ? " em " + new Date(o.emailEnviadoEm).toLocaleString("pt-BR") : ""}`
+                          : "E-mail ainda não enviado — clique para enviar"}
+                        className={`relative p-1.5 rounded transition-colors ${
+                          o.emailEnviado
+                            ? "text-status-resolvido hover:bg-status-resolvido/10"
+                            : "text-destructive hover:bg-destructive/10 animate-pulse"
+                        }`}
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
+                        {o.emailEnviado && (
+                          <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-status-resolvido ring-2 ring-card" />
+                        )}
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); onEdit(o); }}
