@@ -289,6 +289,7 @@ const Index = () => {
           ocorrencia={enviarOcorrencia}
           fornecedor={fornecedores.find((f) => f.id === enviarOcorrencia.fornecedorId)}
           onClose={() => setEnviarOcorrencia(null)}
+          onSent={(id) => setOcorrencias((prev) => prev.map((o) => o.id === id ? { ...o, emailEnviado: true, emailEnviadoEm: new Date().toISOString() } : o))}
         />
       )}
 

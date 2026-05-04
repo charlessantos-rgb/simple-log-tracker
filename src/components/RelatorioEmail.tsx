@@ -5,6 +5,7 @@ interface RelatorioEmailProps {
   ocorrencia: Ocorrencia;
   fornecedor?: Fornecedor;
   onClose: () => void;
+  onSent?: (ocorrenciaId: string) => void;
 }
 
 function gerarHTMLRelatorio(o: Ocorrencia, f?: Fornecedor): string {
@@ -130,7 +131,7 @@ function gerarHTMLRelatorio(o: Ocorrencia, f?: Fornecedor): string {
 </body></html>`;
 }
 
-export function RelatorioEmail({ ocorrencia, fornecedor, onClose }: RelatorioEmailProps) {
+export function RelatorioEmail({ ocorrencia, fornecedor, onClose, onSent }: RelatorioEmailProps) {
   const html = gerarHTMLRelatorio(ocorrencia, fornecedor);
   const cfg = loadConfig();
 
@@ -177,13 +178,19 @@ export function RelatorioEmail({ ocorrencia, fornecedor, onClose }: RelatorioEma
     const destinatario = fornecedor?.email || cfg.destinatarioPadrao || "";
     const ccList = (cfg.ccNovaRNC || []).filter((e) => e && e.trim()).join(",");
     const assunto = `Não Conformidade ${ocorrencia.protocolo} — ${ocorrencia.fornecedorNome}`;
+    // Body intencionalmente vazio quando o HTML rico foi copiado:
+    // assim, ao colar (Ctrl+V) no corpo do Gmail, nada é duplicado fora do quadro.
     const corpoFallback = copiouRich
-      ? "Cole aqui (Ctrl+V) — o conteúdo visual completo do relatório foi copiado para a área de transferência."
+      ? ""
       : `Relatório de Não Conformidade ${ocorrencia.protocolo}.\n\nFornecedor: ${ocorrencia.fornecedorNome}\nNF: ${ocorrencia.notaFiscal}\nStatus: ${ocorrencia.status}\nConferente: ${ocorrencia.conferente}`;
 
     const ccParam = ccList ? `&cc=${encodeURIComponent(ccList)}` : "";
-    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(destinatario)}${ccParam}&su=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpoFallback)}`;
+    const bodyParam = corpoFallback ? `&body=${encodeURIComponent(corpoFallback)}` : "";
+    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(destinatario)}${ccParam}&su=${encodeURIComponent(assunto)}${bodyParam}`;
     window.open(url, "_blank");
+
+    // Sinaliza o envio (ícone verde na tabela)
+    onSent?.(ocorrencia.id);
 
     if (copiouRich) {
       toast.success("Gmail aberto + visual copiado", {
