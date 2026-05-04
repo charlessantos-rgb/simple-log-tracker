@@ -38,6 +38,8 @@ export interface Ocorrencia {
   embalagemAberta: boolean;
   descricao: string;
   conferente: string;
+  emailEnviado?: boolean;
+  emailEnviadoEm?: string;
 }
 
 export interface Conferente {
@@ -251,12 +253,17 @@ const FRASE_POR_MOTIVO: Record<string, (qtd: number, desc: string, codigo: strin
     `não conformidade em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
 };
 
+function fraseGenericaComMotivo(q: number, d: string, c: string, motivo: string): string {
+  return `${motivo.toLowerCase()} em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`;
+}
+
 export function gerarDescricaoAutomatica(materiais: MaterialNaoConforme[]): string {
   const itens = materiais.filter((m) => m.descricao?.trim() && m.motivo?.trim());
   if (itens.length === 0) return "";
   const partes = itens.map((m) => {
-    const fn = FRASE_POR_MOTIVO[m.motivo] || FRASE_POR_MOTIVO["Outros"];
-    return fn(m.quantidade || 0, m.descricao.trim(), m.codigoAndra?.trim() || "");
+    const fn = FRASE_POR_MOTIVO[m.motivo];
+    if (fn) return fn(m.quantidade || 0, m.descricao.trim(), m.codigoAndra?.trim() || "");
+    return fraseGenericaComMotivo(m.quantidade || 0, m.descricao.trim(), m.codigoAndra?.trim() || "", m.motivo);
   });
   let texto: string;
   if (partes.length === 1) {
