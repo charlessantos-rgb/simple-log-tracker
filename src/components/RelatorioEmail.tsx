@@ -5,7 +5,12 @@ interface RelatorioEmailProps {
   ocorrencia: Ocorrencia;
   fornecedor?: Fornecedor;
   onClose: () => void;
+  onSent?: (ocorrenciaId: string) => void;
 }
+
+export function RelatorioEmail({ ocorrencia, fornecedor, onClose, onSent }: RelatorioEmailProps) {
+  const html = gerarHTMLRelatorio(ocorrencia, fornecedor);
+  const cfg = loadConfig();
 
 function gerarHTMLRelatorio(o: Ocorrencia, f?: Fornecedor): string {
   const cfg = loadConfig();
