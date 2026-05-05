@@ -112,9 +112,32 @@ export function TabelaOcorrencias({
                   <td className="px-4 py-3 text-foreground">{o.notaFiscal}</td>
                   <td className="px-4 py-3 text-foreground font-medium">{o.fornecedorNome}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClasses[o.status]}`}>
-                      {o.status}
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClasses[o.status]}`}>
+                        {o.status}
+                      </span>
+                      {(() => {
+                        if (o.status === "Resolvido" || o.status === "Cancelado") return null;
+                        const dias = Math.max(0, Math.floor((Date.now() - new Date(o.dataCriacao).getTime()) / 86400000));
+                        const cor =
+                          dias >= 7
+                            ? "bg-destructive/15 text-destructive border-destructive/30"
+                            : dias >= 3
+                            ? "bg-status-pendente-bg text-status-pendente border-status-pendente/30"
+                            : "bg-muted text-muted-foreground border-border";
+                        return (
+                          <span
+                            title={`Aberta há ${dias} ${dias === 1 ? "dia" : "dias"}`}
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold border ${cor} ${dias >= 7 ? "animate-pulse" : ""}`}
+                          >
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {dias}d
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{new Date(o.dataCriacao).toLocaleDateString("pt-BR")}</td>
                   <td className="px-4 py-3 text-right">
