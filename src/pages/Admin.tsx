@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { EmailListEditor } from "@/components/EmailListEditor";
 import { MotivosEditor } from "@/components/MotivosEditor";
+import { enviarBackupParaDrive } from "@/lib/google-drive-backup";
 
 type Tab = "conferentes" | "usuarios" | "motivos" | "config";
 
