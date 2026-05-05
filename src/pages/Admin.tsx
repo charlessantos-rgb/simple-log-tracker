@@ -34,6 +34,28 @@ export default function Admin() {
   const [usuarios, setUsuarios] = useState<Usuario[]>(loadUsuarios());
   const [config, setConfig] = useState<AppConfig>(loadConfig());
   const [motivos, setMotivos] = useState<string[]>(loadMotivos());
+  const [enviandoBackup, setEnviandoBackup] = useState(false);
+
+  async function handleBackupDrive() {
+    setEnviandoBackup(true);
+    try {
+      const r = await enviarBackupParaDrive();
+      if (r.ok) {
+        toast.success("Backup enviado ao Google Drive!", {
+          description: r.link ? "Clique para abrir no Drive" : undefined,
+          action: r.link ? { label: "Abrir", onClick: () => window.open(r.link!, "_blank") } : undefined,
+        });
+      } else if (r.code === "NOT_CONNECTED") {
+        toast.error("Google Drive não conectado", {
+          description: "Peça ao desenvolvedor para ativar a conexão com o Google Drive no painel Lovable.",
+        });
+      } else {
+        toast.error("Falha ao enviar backup", { description: r.error });
+      }
+    } finally {
+      setEnviandoBackup(false);
+    }
+  }
 
   // Conferente form
   const [novoConfNome, setNovoConfNome] = useState("");
