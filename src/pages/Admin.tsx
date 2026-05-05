@@ -505,6 +505,29 @@ export default function Admin() {
               </div>
             </div>
 
+            <div className="border-t pt-4 space-y-3">
+              <h3 className="text-sm font-bold text-foreground">Backup no Google Drive (opcional)</h3>
+              <p className="text-xs text-muted-foreground">
+                Envia uma cópia da planilha completa (todas as ocorrências, fornecedores, conferentes, usuários e configurações) para a pasta <span className="font-semibold">RNC-Andra-Backups</span> no seu Google Drive.
+              </p>
+              <div className="rounded-md border bg-muted/20 p-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleBackupDrive}
+                  disabled={enviandoBackup}
+                  className="inline-flex items-center gap-2 bg-primary px-4 py-2 text-xs font-bold text-primary-foreground rounded hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.9A5.5 5.5 0 0117.5 9a4.5 4.5 0 011.5 8.74M12 12v9m0 0l-3-3m3 3l3-3" />
+                  </svg>
+                  {enviandoBackup ? "Enviando..." : "Enviar backup agora"}
+                </button>
+                <p className="text-[11px] text-muted-foreground flex-1 min-w-[200px]">
+                  Se for a primeira vez, o desenvolvedor precisa autorizar a conexão com o Google Drive (uma única vez).
+                </p>
+              </div>
+            </div>
+
             <div>
               <button type="submit"
                 className="bg-primary px-6 py-2 text-sm font-bold text-primary-foreground rounded hover:opacity-90 transition-opacity">
