@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import {
   Ocorrencia,
   Fornecedor,
@@ -7,7 +8,9 @@ import {
   statusClasses,
   formatarMoeda,
   calcularValorTotal,
+  calcularDiasEmAberto,
   loadConferentes,
+  loadConfig,
 } from "@/lib/rnc-types";
 
 interface DashboardRelatoriosProps {
