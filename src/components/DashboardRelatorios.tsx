@@ -361,13 +361,14 @@ export function DashboardRelatorios({ ocorrencias, fornecedores, onClose }: Dash
           </div>
 
           {/* KPIs */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
             {[
               { label: "Total RNCs", value: kpis.total.toString(), color: "text-foreground", bg: "bg-primary/5" },
               { label: "Valor em RNC", value: formatarMoeda(kpis.valorTotal), color: "text-foreground", bg: "bg-primary/5" },
               { label: "Recuperado", value: formatarMoeda(kpis.valorRecuperado), color: "text-status-resolvido", bg: "bg-status-resolvido/10" },
               { label: "Pendente", value: formatarMoeda(kpis.valorPendente), color: "text-status-pendente", bg: "bg-status-pendente/10" },
               { label: "Taxa Resolução", value: kpis.taxaResolucao + "%", color: "text-status-andamento", bg: "bg-status-andamento/10" },
+              { label: "Tempo Médio Resol.", value: kpis.tempoMedio + " dias", color: "text-accent-foreground", bg: "bg-accent/15" },
             ].map((k) => (
               <div key={k.label} className={`rounded-lg border p-3 ${k.bg}`}>
                 <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{k.label}</p>
