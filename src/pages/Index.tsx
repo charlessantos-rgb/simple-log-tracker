@@ -19,6 +19,8 @@ import { CadastroFornecedor } from "@/components/CadastroFornecedor";
 import { RelatorioEmail } from "@/components/RelatorioEmail";
 import { DashboardRelatorios } from "@/components/DashboardRelatorios";
 import { RelatorioDiario } from "@/components/RelatorioDiario";
+import { ResolverDialog } from "@/components/ResolverDialog";
+import { calcularDiasEmAberto } from "@/lib/rnc-types";
 
 const Index = () => {
   const navigate = useNavigate();
