@@ -280,6 +280,12 @@ export function DashboardRelatorios({ ocorrencias, fornecedores, onClose }: Dash
             <h2 className="text-base font-extrabold text-primary-foreground print:text-foreground">Dashboard de Relatórios</h2>
             <p className="text-[11px] text-accent print:text-foreground/60">Análise consolidada e individual de RNCs</p>
           </div>
+          <button onClick={enviarPorGmail} className="hidden sm:inline-flex items-center gap-2 bg-accent hover:opacity-90 text-accent-foreground px-3 py-1.5 text-xs font-bold rounded transition-opacity print:hidden">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Enviar por Gmail
+          </button>
           <button onClick={imprimir} className="hidden sm:inline-flex items-center gap-2 border border-accent/40 hover:bg-accent/20 text-accent px-3 py-1.5 text-xs font-semibold rounded transition-colors print:hidden">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
