@@ -366,6 +366,14 @@ const Index = () => {
           </div>
         </div>
       )}
+
+      {resolverOcorrencia && (
+        <ResolverDialog
+          ocorrencia={resolverOcorrencia}
+          onConfirm={confirmarResolucao}
+          onClose={() => setResolverOcorrencia(null)}
+        />
+      )}
     </div>
   );
 };
