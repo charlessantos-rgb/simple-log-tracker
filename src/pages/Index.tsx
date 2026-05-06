@@ -93,10 +93,31 @@ const Index = () => {
   }
 
   function handleResolve(id: string) {
+    const o = ocorrencias.find((x) => x.id === id);
+    if (!o) return;
+    setResolverOcorrencia(o);
+  }
+
+  function confirmarResolucao(solucao: string) {
+    if (!resolverOcorrencia) return;
+    const agora = new Date().toISOString();
     setOcorrencias((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status: "Resolvido" as const } : o))
+      prev.map((o) =>
+        o.id === resolverOcorrencia.id
+          ? {
+              ...o,
+              status: "Resolvido" as const,
+              solucao,
+              dataResolucao: agora,
+              diasEmAberto: calcularDiasEmAberto({ ...o, dataResolucao: agora }),
+            }
+          : o
+      )
     );
-    toast.success("Marcada como resolvida");
+    toast.success(`RNC ${resolverOcorrencia.protocolo} resolvida`, {
+      description: "Solução registrada no histórico.",
+    });
+    setResolverOcorrencia(null);
   }
 
   function handleSaveFornecedor(f: Fornecedor) {
