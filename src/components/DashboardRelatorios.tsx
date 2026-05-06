@@ -69,7 +69,14 @@ export function DashboardRelatorios({ ocorrencias, fornecedores, onClose }: Dash
     const valorPendente = ocorrenciasFiltradas.filter((o) => o.status === "Pendente" || o.status === "Em Andamento")
       .reduce((acc, o) => acc + calcularValorTotal(o.materiais), 0);
     const taxaResolucao = total > 0 ? Math.round((resolvidas.length / total) * 100) : 0;
-    return { total, valorTotal, valorRecuperado, valorPendente, taxaResolucao, resolvidas: resolvidas.length };
+
+    // Tempo médio de resolução (apenas resolvidas com diasEmAberto registrado)
+    const comTempo = resolvidas.filter((o) => typeof o.diasEmAberto === "number");
+    const tempoMedio = comTempo.length > 0
+      ? Math.round(comTempo.reduce((a, o) => a + (o.diasEmAberto || 0), 0) / comTempo.length)
+      : 0;
+
+    return { total, valorTotal, valorRecuperado, valorPendente, taxaResolucao, resolvidas: resolvidas.length, tempoMedio };
   }, [ocorrenciasFiltradas]);
 
   // Ranking de conferentes que mais detectaram NC
