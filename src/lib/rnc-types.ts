@@ -40,6 +40,19 @@ export interface Ocorrencia {
   conferente: string;
   emailEnviado?: boolean;
   emailEnviadoEm?: string;
+  /** Descrição da solução aplicada para resolver a RNC (obrigatória ao marcar como Resolvido) */
+  solucao?: string;
+  /** Data/hora em que a ocorrência foi marcada como Resolvida */
+  dataResolucao?: string;
+  /** Total de dias que a ocorrência ficou em aberto (preenchido ao resolver) */
+  diasEmAberto?: number;
+}
+
+/** Calcula quantos dias uma ocorrência está/ficou em aberto */
+export function calcularDiasEmAberto(o: Ocorrencia): number {
+  const inicio = new Date(o.dataCriacao).getTime();
+  const fim = o.dataResolucao ? new Date(o.dataResolucao).getTime() : Date.now();
+  return Math.max(0, Math.floor((fim - inicio) / 86400000));
 }
 
 export interface Conferente {
