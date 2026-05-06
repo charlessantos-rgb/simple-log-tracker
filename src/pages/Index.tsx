@@ -37,6 +37,7 @@ const Index = () => {
   const [showRelatorioDiario, setShowRelatorioDiario] = useState(false);
   const [showArquivo, setShowArquivo] = useState(false);
   const [fornecedorPreSelecionadoId, setFornecedorPreSelecionadoId] = useState<string | undefined>(undefined);
+  const [resolverOcorrencia, setResolverOcorrencia] = useState<Ocorrencia | null>(null);
 
   const ocorrenciasAtivas = ocorrencias.filter((o) => o.status !== "Resolvido");
   const ocorrenciasArquivadas = ocorrencias.filter((o) => o.status === "Resolvido");
