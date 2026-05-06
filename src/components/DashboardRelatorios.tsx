@@ -139,6 +139,132 @@ export function DashboardRelatorios({ ocorrencias, fornecedores, onClose }: Dash
     window.print();
   }
 
+  function gerarHTMLRelatorio(): string {
+    const cfg = loadConfig();
+    const periodo = dataInicial || dataFinal
+      ? `${dataInicial ? new Date(dataInicial + "T12:00:00").toLocaleDateString("pt-BR") : "início"} até ${dataFinal ? new Date(dataFinal + "T12:00:00").toLocaleDateString("pt-BR") : "hoje"}`
+      : "Todos os períodos";
+
+    const linhasMotivos = rankMotivos.map(([m, d]) => `
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:6px 10px;font-size:12px;">${m}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:center;">${d.count}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:right;font-weight:600;">${formatarMoeda(d.valor)}</td>
+      </tr>`).join("");
+
+    const linhasFornecedores = rankFornecedores.slice(0, 10).map(([n, d]) => `
+      <tr style="border-bottom:1px solid #eee;">
+        <td style="padding:6px 10px;font-size:12px;">${n}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:center;">${d.count}</td>
+        <td style="padding:6px 10px;font-size:12px;text-align:right;font-weight:600;">${formatarMoeda(d.valor)}</td>
+      </tr>`).join("");
+
+    const linhasOcorrencias = ocorrenciasFiltradas.map((o) => {
+      const dias = o.status === "Resolvido" ? (o.diasEmAberto ?? 0) : calcularDiasEmAberto(o);
+      const corStatus = o.status === "Resolvido" ? "#28a745" : o.status === "Pendente" ? "#D4A017" : o.status === "Em Andamento" ? "#007bff" : "#dc3545";
+      return `
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:6px 8px;font-size:11px;font-family:monospace;">${o.protocolo}</td>
+          <td style="padding:6px 8px;font-size:11px;">${new Date(o.dataCriacao).toLocaleDateString("pt-BR")}</td>
+          <td style="padding:6px 8px;font-size:11px;">${o.fornecedorNome}</td>
+          <td style="padding:6px 8px;font-size:11px;">${o.notaFiscal || "—"}</td>
+          <td style="padding:6px 8px;font-size:11px;text-align:center;">${o.materiais.length}</td>
+          <td style="padding:6px 8px;font-size:11px;text-align:right;font-weight:600;">${formatarMoeda(calcularValorTotal(o.materiais))}</td>
+          <td style="padding:6px 8px;font-size:11px;text-align:center;font-weight:600;color:${dias >= 7 ? "#dc3545" : "#666"};">${dias}d</td>
+          <td style="padding:6px 8px;font-size:11px;"><span style="background:${corStatus};color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;">${o.status}</span></td>
+        </tr>`;
+    }).join("");
+
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Relatório Gerencial RNC</title></head>
+<body style="margin:0;padding:20px;font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;">
+<div style="max-width:980px;margin:0 auto;background:#fff;border:2px solid #1a1a1a;border-radius:6px;overflow:hidden;">
+  <div style="background:#1a1a1a;padding:18px 25px;display:flex;align-items:center;gap:15px;">
+    <img src="${window.location.origin}/logo-50anos.png" style="height:60px;" alt="Andra 50 Anos" />
+    <div style="flex:1;text-align:center;">
+      <h1 style="margin:0;font-size:22px;color:#D4A017;font-weight:800;">Relatório Gerencial de RNCs</h1>
+      <p style="margin:4px 0 0;font-size:13px;color:#ccc;">Período: ${periodo}</p>
+    </div>
+  </div>
+  <div style="padding:22px 25px;">
+    <h2 style="font-size:14px;color:#1a1a1a;margin:0 0 12px;border-bottom:2px solid #D4A017;padding-bottom:6px;">Indicadores Consolidados</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:22px;">
+      <tr>
+        <td style="padding:10px;background:#f9f9f9;border:1px solid #eee;text-align:center;width:14%;"><div style="font-size:10px;color:#888;text-transform:uppercase;font-weight:700;">Total RNCs</div><div style="font-size:20px;font-weight:800;color:#1a1a1a;margin-top:4px;">${kpis.total}</div></td>
+        <td style="padding:10px;background:#f9f9f9;border:1px solid #eee;text-align:center;"><div style="font-size:10px;color:#888;text-transform:uppercase;font-weight:700;">Valor em RNC</div><div style="font-size:16px;font-weight:800;color:#1a1a1a;margin-top:4px;">${formatarMoeda(kpis.valorTotal)}</div></td>
+        <td style="padding:10px;background:#eafaf0;border:1px solid #c8e6c9;text-align:center;"><div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Recuperado</div><div style="font-size:16px;font-weight:800;color:#28a745;margin-top:4px;">${formatarMoeda(kpis.valorRecuperado)}</div></td>
+        <td style="padding:10px;background:#fff8e1;border:1px solid #ffe0a3;text-align:center;"><div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Pendente</div><div style="font-size:16px;font-weight:800;color:#D4A017;margin-top:4px;">${formatarMoeda(kpis.valorPendente)}</div></td>
+        <td style="padding:10px;background:#e3f2fd;border:1px solid #b3d9ff;text-align:center;width:12%;"><div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Taxa Resol.</div><div style="font-size:20px;font-weight:800;color:#007bff;margin-top:4px;">${kpis.taxaResolucao}%</div></td>
+        <td style="padding:10px;background:#f3e5f5;border:1px solid #d1b3d8;text-align:center;width:14%;"><div style="font-size:10px;color:#666;text-transform:uppercase;font-weight:700;">Tempo Médio</div><div style="font-size:20px;font-weight:800;color:#6a1b9a;margin-top:4px;">${kpis.tempoMedio}d</div></td>
+      </tr>
+    </table>
+
+    <h2 style="font-size:14px;color:#1a1a1a;margin:0 0 12px;border-bottom:2px solid #D4A017;padding-bottom:6px;">Impacto por Motivo</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:22px;">
+      <thead><tr style="background:#1a1a1a;color:#D4A017;"><th style="padding:8px 10px;text-align:left;font-size:11px;">Motivo</th><th style="padding:8px 10px;text-align:center;font-size:11px;width:80px;">Ocorrências</th><th style="padding:8px 10px;text-align:right;font-size:11px;width:140px;">Valor</th></tr></thead>
+      <tbody>${linhasMotivos || '<tr><td colspan="3" style="padding:14px;text-align:center;color:#999;font-size:12px;">Sem dados</td></tr>'}</tbody>
+    </table>
+
+    <h2 style="font-size:14px;color:#1a1a1a;margin:0 0 12px;border-bottom:2px solid #D4A017;padding-bottom:6px;">Top 10 Fornecedores com Maior Impacto</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:22px;">
+      <thead><tr style="background:#1a1a1a;color:#D4A017;"><th style="padding:8px 10px;text-align:left;font-size:11px;">Fornecedor</th><th style="padding:8px 10px;text-align:center;font-size:11px;width:80px;">Ocorrências</th><th style="padding:8px 10px;text-align:right;font-size:11px;width:140px;">Valor</th></tr></thead>
+      <tbody>${linhasFornecedores || '<tr><td colspan="3" style="padding:14px;text-align:center;color:#999;font-size:12px;">Sem dados</td></tr>'}</tbody>
+    </table>
+
+    <h2 style="font-size:14px;color:#1a1a1a;margin:0 0 12px;border-bottom:2px solid #D4A017;padding-bottom:6px;">Detalhamento de Ocorrências (${ocorrenciasFiltradas.length})</h2>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="background:#1a1a1a;color:#D4A017;">
+        <th style="padding:8px;text-align:left;font-size:10px;">Protocolo</th>
+        <th style="padding:8px;text-align:left;font-size:10px;">Data</th>
+        <th style="padding:8px;text-align:left;font-size:10px;">Fornecedor</th>
+        <th style="padding:8px;text-align:left;font-size:10px;">NF</th>
+        <th style="padding:8px;text-align:center;font-size:10px;">Itens</th>
+        <th style="padding:8px;text-align:right;font-size:10px;">Valor</th>
+        <th style="padding:8px;text-align:center;font-size:10px;">Dias</th>
+        <th style="padding:8px;text-align:left;font-size:10px;">Status</th>
+      </tr></thead>
+      <tbody>${linhasOcorrencias || '<tr><td colspan="8" style="padding:14px;text-align:center;color:#999;">Nenhuma ocorrência</td></tr>'}</tbody>
+    </table>
+
+    <div style="border-top:1px solid #ddd;padding-top:15px;margin-top:25px;font-size:11px;color:#666;line-height:1.6;">
+      <p style="margin:0;">Atenciosamente,</p>
+      <p style="margin:8px 0 0;"><strong>${cfg.remetenteNome}</strong><br/>${cfg.remetenteCargo}<br/>${cfg.remetenteEmpresa}<br/>
+      <a href="http://${cfg.remetenteSite}" style="color:#D4A017;text-decoration:none;">${cfg.remetenteSite}</a></p>
+    </div>
+  </div>
+</div></body></html>`;
+  }
+
+  async function enviarPorGmail() {
+    const html = gerarHTMLRelatorio();
+    const cfg = loadConfig();
+    let copiouRich = false;
+    try {
+      const blobHtml = new Blob([html], { type: "text/html" });
+      const blobText = new Blob([`Relatório Gerencial RNC`], { type: "text/plain" });
+      const item = new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText });
+      await navigator.clipboard.write([item]);
+      copiouRich = true;
+    } catch { copiouRich = false; }
+
+    const destinatarios = (cfg.ccRelatorio || []).filter((e) => e && e.trim());
+    const to = destinatarios[0] || "";
+    const cc = destinatarios.slice(1).join(",");
+    const assunto = `Relatório Gerencial de RNCs (${ocorrenciasFiltradas.length} ocorrências · ${formatarMoeda(kpis.valorTotal)})`;
+    const corpo = copiouRich
+      ? "Cole aqui (Ctrl+V) — o relatório gerencial completo foi copiado para a área de transferência."
+      : `Relatório Gerencial de RNCs\nTotal: ${ocorrenciasFiltradas.length} ocorrências · ${formatarMoeda(kpis.valorTotal)}.`;
+
+    const ccParam = cc ? `&cc=${encodeURIComponent(cc)}` : "";
+    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}${ccParam}&su=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
+    window.open(url, "_blank");
+
+    if (copiouRich) {
+      toast.success("Gmail aberto + relatório copiado", { description: "Cole no corpo do e-mail (Ctrl+V).", duration: 6000 });
+    } else {
+      toast.warning("Gmail aberto", { description: "Não foi possível copiar automaticamente. Use Imprimir/PDF e anexe." });
+    }
+  }
+
   const maxFornValor = rankFornecedores[0]?.[1].valor || 1;
   const maxMotivoValor = rankMotivos[0]?.[1].valor || 1;
   const maxConfCount = rankConferentes[0]?.[1].count || 1;
