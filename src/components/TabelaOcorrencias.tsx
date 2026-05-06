@@ -117,7 +117,23 @@ export function TabelaOcorrencias({
                         {o.status}
                       </span>
                       {(() => {
-                        if (o.status === "Resolvido" || o.status === "Cancelado") return null;
+                        // Resolvido: mostrar quantos dias levou
+                        if (o.status === "Resolvido") {
+                          if (o.diasEmAberto === undefined) return null;
+                          const d = o.diasEmAberto;
+                          return (
+                            <span
+                              title={`Resolvida em ${d} ${d === 1 ? "dia" : "dias"}${o.dataResolucao ? " (" + new Date(o.dataResolucao).toLocaleDateString("pt-BR") + ")" : ""}`}
+                              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold border bg-status-resolvido/10 text-status-resolvido border-status-resolvido/30"
+                            >
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                              {d}d p/ resolver
+                            </span>
+                          );
+                        }
+                        if (o.status === "Cancelado") return null;
                         const dias = Math.max(0, Math.floor((Date.now() - new Date(o.dataCriacao).getTime()) / 86400000));
                         const cor =
                           dias >= 7
