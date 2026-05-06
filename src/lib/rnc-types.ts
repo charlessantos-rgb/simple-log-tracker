@@ -40,6 +40,19 @@ export interface Ocorrencia {
   conferente: string;
   emailEnviado?: boolean;
   emailEnviadoEm?: string;
+  /** Descrição da solução aplicada para resolver a RNC (obrigatória ao marcar como Resolvido) */
+  solucao?: string;
+  /** Data/hora em que a ocorrência foi marcada como Resolvida */
+  dataResolucao?: string;
+  /** Total de dias que a ocorrência ficou em aberto (preenchido ao resolver) */
+  diasEmAberto?: number;
+}
+
+/** Calcula quantos dias uma ocorrência está/ficou em aberto */
+export function calcularDiasEmAberto(o: Ocorrencia): number {
+  const inicio = new Date(o.dataCriacao).getTime();
+  const fim = o.dataResolucao ? new Date(o.dataResolucao).getTime() : Date.now();
+  return Math.max(0, Math.floor((fim - inicio) / 86400000));
 }
 
 export interface Conferente {
@@ -238,23 +251,34 @@ function pluralizarUnidade(qtd: number): string {
   return qtd === 1 ? "unidade" : "unidades";
 }
 
+/** Frase técnica e profissional por tipo de motivo */
 const FRASE_POR_MOTIVO: Record<string, (qtd: number, desc: string, codigo: string) => string> = {
   "Quantidade divergente": (q, d, c) =>
-    `divergência de quantidade (${q} ${pluralizarUnidade(q)}) no material ${d}${c ? ` (cód. ${c})` : ""}`,
+    `o material ${d}${c ? ` (cód. ${c})` : ""} apresentou divergência de quantidade, sendo recebidas ${q} ${pluralizarUnidade(q)} em desacordo com o pedido de compra`,
   "Material danificado": (q, d, c) =>
-    `avaria em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
+    `foram identificadas ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""} com avarias físicas, comprometendo sua integridade e utilização`,
   "Material incorreto": (q, d, c) =>
-    `envio incorreto de ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""} (item não corresponde ao pedido)`,
+    `o material ${d}${c ? ` (cód. ${c})` : ""} encontra-se divergente do pedido, com ${q} ${pluralizarUnidade(q)} entregues em desacordo com a especificação solicitada`,
   "Falta de material": (q, d, c) =>
-    `ausência de ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
+    `constatou-se a ausência de ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}, caracterizando falta no recebimento em relação à nota fiscal`,
   "Validade vencida": (q, d, c) =>
-    `validade vencida em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
+    `${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""} encontram-se com prazo de validade expirado, impossibilitando a aceitação do recebimento`,
+  "Embalagem violada": (q, d, c) =>
+    `${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""} foram recebidas com embalagem violada, comprometendo a garantia de integridade do produto`,
+  "Especificação técnica divergente": (q, d, c) =>
+    `o material ${d}${c ? ` (cód. ${c})` : ""} apresenta especificação técnica divergente da solicitada, totalizando ${q} ${pluralizarUnidade(q)} fora do padrão contratado`,
+  "Produto fora do padrão de qualidade": (q, d, c) =>
+    `${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""} não atendem aos padrões mínimos de qualidade exigidos pela Andra`,
+  "Identificação/etiqueta incorreta": (q, d, c) =>
+    `${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""} apresentam identificação/etiquetagem incorreta, dificultando a rastreabilidade e conferência`,
+  "Lote não corresponde ao pedido": (q, d, c) =>
+    `o lote entregue do material ${d}${c ? ` (cód. ${c})` : ""} (${q} ${pluralizarUnidade(q)}) não corresponde ao lote especificado no pedido de compra`,
   Outros: (q, d, c) =>
-    `não conformidade em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
+    `foi constatada não conformidade em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`,
 };
 
 function fraseGenericaComMotivo(q: number, d: string, c: string, motivo: string): string {
-  return `${motivo.toLowerCase()} em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`;
+  return `verificou-se ${motivo.toLowerCase()} em ${q} ${pluralizarUnidade(q)} do material ${d}${c ? ` (cód. ${c})` : ""}`;
 }
 
 export function gerarDescricaoAutomatica(materiais: MaterialNaoConforme[]): string {
@@ -269,7 +293,8 @@ export function gerarDescricaoAutomatica(materiais: MaterialNaoConforme[]): stri
   if (partes.length === 1) {
     texto = partes[0];
   } else {
-    texto = partes.slice(0, -1).join("; ") + " e " + partes[partes.length - 1];
+    texto = partes.slice(0, -1).join("; ") + "; e " + partes[partes.length - 1];
   }
-  return `Durante a conferência do recebimento foi constatada ${texto}. Solicitamos a regularização da pendência conforme procedimento de não conformidade.`;
+  return `Durante o processo de conferência do recebimento foi constatado que ${texto}. Diante do exposto, solicitamos a devida regularização da pendência conforme procedimento interno de tratamento de não conformidades, com retorno formal sobre as providências adotadas.`;
 }
+

@@ -19,6 +19,8 @@ import { CadastroFornecedor } from "@/components/CadastroFornecedor";
 import { RelatorioEmail } from "@/components/RelatorioEmail";
 import { DashboardRelatorios } from "@/components/DashboardRelatorios";
 import { RelatorioDiario } from "@/components/RelatorioDiario";
+import { ResolverDialog } from "@/components/ResolverDialog";
+import { calcularDiasEmAberto } from "@/lib/rnc-types";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ const Index = () => {
   const [showRelatorioDiario, setShowRelatorioDiario] = useState(false);
   const [showArquivo, setShowArquivo] = useState(false);
   const [fornecedorPreSelecionadoId, setFornecedorPreSelecionadoId] = useState<string | undefined>(undefined);
+  const [resolverOcorrencia, setResolverOcorrencia] = useState<Ocorrencia | null>(null);
 
   const ocorrenciasAtivas = ocorrencias.filter((o) => o.status !== "Resolvido");
   const ocorrenciasArquivadas = ocorrencias.filter((o) => o.status === "Resolvido");
@@ -90,10 +93,31 @@ const Index = () => {
   }
 
   function handleResolve(id: string) {
+    const o = ocorrencias.find((x) => x.id === id);
+    if (!o) return;
+    setResolverOcorrencia(o);
+  }
+
+  function confirmarResolucao(solucao: string) {
+    if (!resolverOcorrencia) return;
+    const agora = new Date().toISOString();
     setOcorrencias((prev) =>
-      prev.map((o) => (o.id === id ? { ...o, status: "Resolvido" as const } : o))
+      prev.map((o) =>
+        o.id === resolverOcorrencia.id
+          ? {
+              ...o,
+              status: "Resolvido" as const,
+              solucao,
+              dataResolucao: agora,
+              diasEmAberto: calcularDiasEmAberto({ ...o, dataResolucao: agora }),
+            }
+          : o
+      )
     );
-    toast.success("Marcada como resolvida");
+    toast.success(`RNC ${resolverOcorrencia.protocolo} resolvida`, {
+      description: "Solução registrada no histórico.",
+    });
+    setResolverOcorrencia(null);
   }
 
   function handleSaveFornecedor(f: Fornecedor) {
@@ -341,6 +365,14 @@ const Index = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {resolverOcorrencia && (
+        <ResolverDialog
+          ocorrencia={resolverOcorrencia}
+          onConfirm={confirmarResolucao}
+          onClose={() => setResolverOcorrencia(null)}
+        />
       )}
     </div>
   );
