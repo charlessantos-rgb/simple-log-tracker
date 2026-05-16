@@ -129,7 +129,6 @@ function gerarHTMLRelatorio(o: Ocorrencia, f?: Fornecedor): string {
             <td style="font-size:11px;font-weight:700;color:#8a6d1f;letter-spacing:0.5px;">PROTOCOLO N° </td>
             <td align="right" style="font-size:13px;font-weight:700;color:#1a1a1a;">${escapeHtml(o.protocolo)}</td>
           </tr></table>
-        </td>
       </tr>
 
       <!-- SAUDAÇÃO -->
