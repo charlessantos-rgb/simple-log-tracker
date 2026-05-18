@@ -46,8 +46,62 @@ function gerarHTMLRelatorio(o: Ocorrencia, f?: Fornecedor): string {
   const embalagemIcone = o.embalagemLacrada ? "🔒" : o.embalagemAberta ? "📦" : "❔";
   const embalagemLabel = o.embalagemLacrada ? "Lacrada" : o.embalagemAberta ? "Aberta" : "—";
 
-  const materiaisRows =
-    o.materiais.length === 0
+const materiaisRows =
+  o.materiais.length === 0
+    ? `
+      <tr>
+        <td
+          colspan="6"
+          style="padding:16px;text-align:center;color:#888;font-size:13px;"
+        >
+          Nenhum material registrado
+        </td>
+      </tr>
+    `
+    : o.materiais
+        .map(
+          (m: Material, i: number) => `
+            <tr style="border-bottom:1px solid #eee;">
+
+              <td style="padding:10px 12px;font-size:13px;color:#333;">
+                ${i + 1}
+              </td>
+
+              <td style="padding:10px 12px;font-size:13px;color:#333;">
+                ${escapeHtml(m.codigoAndra) || "—"}
+              </td>
+
+              <td style="padding:10px 12px;font-size:13px;color:#333;">
+                ${escapeHtml(m.codigoFornecedor) || "—"}
+              </td>
+
+              <td style="padding:10px 12px;font-size:13px;color:#333;">
+                ${escapeHtml(m.descricao) || "—"}
+              </td>
+
+              <td style="padding:10px 12px;font-size:13px;color:#333;">
+                ${m.quantidade || 0}
+              </td>
+
+              <td style="padding:10px 12px;font-size:13px;">
+                <span
+                  style="
+                    background:#D4A017;
+                    color:#fff;
+                    padding:4px 10px;
+                    border-radius:4px;
+                    font-size:12px;
+                    font-weight:600;
+                  "
+                >
+                  ${escapeHtml(m.motivo) || "—"}
+                </span>
+              </td>
+
+            </tr>
+          `
+        )
+        .join("");
 const materiaisRows =
   oc.materiais.length === 0
     ? `<tr>
