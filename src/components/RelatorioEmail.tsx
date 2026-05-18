@@ -48,7 +48,21 @@ function gerarHTMLRelatorio(o: Ocorrencia, f?: Fornecedor): string {
 
   const materiaisRows =
     o.materiais.length === 0
-      ? `<tr><td colspan="6" style="padding:16px;text-align:center;color:#888;font-size:13px;">Nenhum material registrado</td></tr>`
+const materiaisRows =
+  oc.materiais.length === 0
+    ? `<tr>
+        <td colspan="6" style="padding:16px;text-align:center;color:#888;font-size:13px;">
+          Nenhum material registrado
+        </td>
+      </tr>`
+    : oc.materiais
+        .map((m) => `
+          <tr>
+            <td>${m.codigo}</td>
+            <td>${m.descricao}</td>
+          </tr>
+        `)
+        .join("");
       : o.materiais
           .map(
             (m: Material, i: number) => `
